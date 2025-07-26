@@ -1,13 +1,13 @@
+import { createFileRoute } from '@tanstack/react-router';
 import StreamsForm from '../components/StreamsForm/StreamsForm';
 
-function Home() {
+export const Route = createFileRoute('/')({
+  component: Index,
+});
+
+function Index() {
   const handleFormSubmit = (streams: string[]) => {
     console.log('Submitted streams:', streams);
-    // Here you can handle the form submission:
-    // - Save to state
-    // - Send to API
-    // - Store in localStorage
-    // etc.
   };
 
   return (
@@ -17,4 +17,4 @@ function Home() {
   );
 }
 
-export default Home;
+export default Index;
