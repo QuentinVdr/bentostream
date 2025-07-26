@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import StreamsForm from '../components/StreamsForm/StreamsForm';
 
 export const Route = createFileRoute('/')({
@@ -6,15 +6,15 @@ export const Route = createFileRoute('/')({
 });
 
 function Index() {
+  const navigate = useNavigate();
+
   const handleFormSubmit = (streams: string[]) => {
-    console.log('Submitted streams:', streams);
+    navigate({ to: `/watch`, search: { streams: streams } });
   };
 
   return (
-    <div className="flex min-h-dvh w-dvw items-center justify-center bg-zinc-950 p-4">
+    <div className="flex min-h-dvh items-center justify-center p-4">
       <StreamsForm onSubmit={handleFormSubmit} />
     </div>
   );
 }
-
-export default Index;
