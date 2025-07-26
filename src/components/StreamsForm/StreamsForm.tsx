@@ -68,13 +68,11 @@ const StreamsForm = ({ onSubmit }: StreamsFormProps) => {
       }
 
       if (e.key === 'Backspace') {
-        // If backspace in first input and we have exactly 2 inputs, remove the second one
         if (index === 0 && inputs.length === 2) {
           setInputs(prev => prev.filter((_, i) => i !== 1));
           return;
         }
 
-        // If backspace in empty input (not first), remove current input and focus previous
         if (inputs[index].value === '' && index > 0) {
           setInputs(prev => prev.filter((_, i) => i !== index));
           setTimeout(() => {
