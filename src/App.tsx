@@ -1,5 +1,7 @@
+import Home from './pages/Home';
+
 function App() {
-  return <div className="min-h-dvh w-dvw bg-zinc-950"></div>;
+  return <Home />;
 }
 
 export default App;
