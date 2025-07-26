@@ -22,6 +22,8 @@ function Watch() {
   const isEven = streams.length % 2 === 0;
   const firstStream = streams[0];
 
+  const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   return (
     <div className="flex h-dvh w-dvw">
       {streams.map(streamName => (
@@ -37,7 +39,7 @@ function Watch() {
         <iframe
           key={firstStream}
           title={`Twitch Stream: ${firstStream}`}
-          src={`https://www.twitch.tv/embed/${firstStream}/chat?parent=${window.location.hostname}`}
+          src={`https://www.twitch.tv/embed/${firstStream}/chat?parent=${window.location.hostname}${isDarkThemePreferred ? '&darkpopout' : ''}`}
           height="100%"
           width="100%"
         />
