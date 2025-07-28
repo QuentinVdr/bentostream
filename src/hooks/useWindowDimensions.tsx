@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import debounce from '../utils/debounce';
+import debounce from '../utils/DebounceUtils';
 
 interface WindowDimensions {
   width: number;
