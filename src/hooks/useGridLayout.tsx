@@ -7,7 +7,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
     const streamCount = streams.length;
 
     if (streamCount === 1) {
-      // Single stream layout
       layout.push(
         {
           i: `stream-${streams[0]}`,
@@ -25,7 +24,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         }
       );
     } else if (streamCount === 2) {
-      // Two streams layout
       layout.push(
         {
           i: `stream-${streams[0]}`,
@@ -50,7 +48,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         }
       );
     } else if (streamCount === 3) {
-      // Three streams layout
       layout.push(
         {
           i: `stream-${streams[0]}`,
@@ -82,7 +79,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         }
       );
     } else if (streamCount === 4) {
-      // Three streams layout
       layout.push(
         {
           i: `stream-${streams[0]}`,
@@ -121,7 +117,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         }
       );
     } else if (streamCount === 5) {
-      // Three streams layout
       layout.push(
         {
           i: `stream-${streams[0]}`,
@@ -167,7 +162,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         }
       );
     } else if (streamCount === 6) {
-      // Three streams layout
       layout.push(
         {
           i: `stream-${streams[0]}`,
@@ -220,7 +214,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         }
       );
     } else {
-      // Four or more streams layout
       const cols = Math.ceil(Math.sqrt(streamCount));
       const streamWidth = Math.floor(12 / cols);
 

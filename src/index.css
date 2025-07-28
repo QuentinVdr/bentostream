@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 
-/* React Grid Layout overrides */
 .react-grid-layout {
   position: relative;
 }
