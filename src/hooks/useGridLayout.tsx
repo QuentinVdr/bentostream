@@ -15,8 +15,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           y: 0,
           w: 9,
           h: 8,
-          minW: 6,
-          minH: 4,
         },
         {
           i: `chat-${streams[0]}`,
@@ -24,9 +22,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           y: 0,
           w: 3,
           h: 8,
-          minW: 2,
-          minH: 4,
-          maxW: 4,
         }
       );
     } else if (streamCount === 2) {
@@ -38,8 +33,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           y: 0,
           w: 9,
           h: 6,
-          minW: 4,
-          minH: 4,
         },
         {
           i: `stream-${streams[1]}`,
@@ -47,8 +40,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           y: 6,
           w: 9,
           h: 6,
-          minW: 4,
-          minH: 4,
         },
         {
           i: `chat-${streams[0]}`,
@@ -56,9 +47,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           y: 0,
           w: 3,
           h: 12,
-          minW: 3,
-          minH: 6,
-          maxW: 4,
         }
       );
     } else if (streamCount === 3) {
@@ -68,38 +56,167 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           i: `stream-${streams[0]}`,
           x: 0,
           y: 0,
-          w: 6,
-          h: 5,
-          minW: 4,
-          minH: 3,
+          w: 8,
+          h: 8,
         },
         {
           i: `stream-${streams[1]}`,
-          x: 6,
-          y: 0,
-          w: 6,
-          h: 5,
-          minW: 4,
-          minH: 3,
+          x: 0,
+          y: 8,
+          w: 4,
+          h: 4,
         },
         {
           i: `stream-${streams[2]}`,
-          x: 0,
-          y: 5,
-          w: 8,
-          h: 5,
-          minW: 4,
-          minH: 3,
+          x: 4,
+          y: 8,
+          w: 4,
+          h: 4,
         },
         {
           i: `chat-${streams[0]}`,
           x: 8,
-          y: 5,
+          y: 0,
           w: 4,
-          h: 5,
-          minW: 3,
-          minH: 3,
-          maxW: 4,
+          h: 12,
+        }
+      );
+    } else if (streamCount === 4) {
+      // Three streams layout
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 9,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${streams[0]}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 12,
+        }
+      );
+    } else if (streamCount === 5) {
+      // Three streams layout
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 9,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[4]}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${streams[0]}`,
+          x: 9,
+          y: 4,
+          w: 3,
+          h: 8,
+        }
+      );
+    } else if (streamCount === 6) {
+      // Three streams layout
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 6,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[4]}`,
+          x: 6,
+          y: 0,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[5]}`,
+          x: 6,
+          y: 4,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${streams[0]}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 12,
         }
       );
     } else {
@@ -116,8 +233,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           y: row,
           w: streamWidth,
           h: 5,
-          minW: 3,
-          minH: 3,
         });
       });
 
@@ -128,9 +243,6 @@ export const useGridLayout = (streams: string[]): Layout[] => {
         y: chatRow,
         w: 4,
         h: 4,
-        minW: 3,
-        minH: 3,
-        maxW: 4,
       });
     }
 
