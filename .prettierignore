@@ -5,6 +5,9 @@ node_modules
 dist
 build
 
+# Generated files
+**/*.gen.*
+
 # Lock files
 package-lock.json
 pnpm-lock.yaml
