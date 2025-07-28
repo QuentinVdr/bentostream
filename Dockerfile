@@ -16,8 +16,8 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the application
-RUN pnpm build
+# Build the application only if dist folder doesn't exist
+RUN if [ ! -d "dist" ]; then pnpm build; fi
 
 # Production stage - use a simple static file server
 FROM node:20-alpine AS production
