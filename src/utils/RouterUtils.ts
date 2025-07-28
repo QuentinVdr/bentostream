@@ -1,4 +1,4 @@
-export const customSearchParamSerializer = {
+const customSearchParamSerializer = {
   stringify: (search: Record<string, unknown>): string => {
     const params = new URLSearchParams();
 
@@ -34,3 +34,5 @@ export const customSearchParamSerializer = {
     return search;
   },
 };
+
+export default customSearchParamSerializer;

@@ -3,7 +3,7 @@ import { StrictMode } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import { routeTree } from './routeTree.gen';
-import { customSearchParamSerializer } from './utils/RouterUtils';
+import customSearchParamSerializer from './utils/RouterUtils';
 
 const router = createRouter({
   routeTree,
