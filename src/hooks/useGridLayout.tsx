@@ -32,21 +32,21 @@ export const useGridLayout = (streams: string[]): Layout[] => {
           x: 0,
           y: 0,
           w: 9,
-          h: 6,
+          h: 12,
         },
         {
           i: `stream-${streams[1]}`,
-          x: 0,
-          y: 6,
-          w: 9,
-          h: 6,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 4,
         },
         {
           i: `chat-${streams[0]}`,
           x: 9,
-          y: 0,
+          y: 4,
           w: 3,
-          h: 12,
+          h: 8,
         }
       );
     } else if (streamCount === 3) {
