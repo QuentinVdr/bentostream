@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base image
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 # Install pnpm
 RUN npm install -g pnpm
@@ -20,7 +20,7 @@ COPY . .
 RUN if [ ! -d "dist" ]; then pnpm build; fi
 
 # Production stage - use a simple static file server
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 # Install serve globally
 RUN npm install -g serve
