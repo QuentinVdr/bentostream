@@ -7,7 +7,8 @@ interface StreamGridItemProps {
 }
 
 const StreamGridItem = memo(({ streamName, isChat = false, isDarkThemePreferred = false }: StreamGridItemProps) => {
-  // Memoize iframe src to prevent unnecessary re-renders
+  const title = useMemo(() => (isChat ? `Chat: ${streamName}` : `Stream: ${streamName}`), [isChat, streamName]);
+
   const iframeSrc = useMemo(() => {
     if (isChat) {
       const darkParam = isDarkThemePreferred ? '&darkpopout' : '';
@@ -16,17 +17,10 @@ const StreamGridItem = memo(({ streamName, isChat = false, isDarkThemePreferred 
     return `https://player.twitch.tv/?channel=${streamName}&parent=${window.location.hostname}`;
   }, [streamName, isChat, isDarkThemePreferred]);
 
-  const title = useMemo(
-    () => (isChat ? `Twitch Chat: ${streamName}` : `Twitch Stream: ${streamName}`),
-    [isChat, streamName]
-  );
-
-  const headerText = useMemo(() => (isChat ? `Chat: ${streamName}` : `Stream: ${streamName}`), [isChat, streamName]);
-
   return (
     <div className="flex h-full w-full flex-col flex-nowrap overflow-hidden rounded border border-gray-300/20 bg-zinc-900">
       <div>
-        <h2 className="text-center text-base font-semibold">{headerText}</h2>
+        <h2 className="text-center text-base font-semibold">{title}</h2>
       </div>
       <iframe title={title} src={iframeSrc} height="100%" width="100%" allowFullScreen={!isChat} loading="lazy" />
     </div>
