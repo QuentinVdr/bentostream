@@ -1,11 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import RGL, { WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import StreamGridItem from '../components/StreamGridItem/StreamGridItem';
-import { useGridLayout } from '../hooks/useGridLayout';
 import { useWindowDimensions } from '../hooks/useWindowDimensions';
+import { useStreamStore } from '../stores/streamStore';
 
 export const Route = createFileRoute('/watch')({
   validateSearch: (search: Record<string, unknown>) => {
@@ -30,9 +30,15 @@ function Watch() {
   const { streams } = Route.useSearch();
   const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-  const dimensions = useWindowDimensions(100);
-  const layout = useGridLayout(streams);
+  // Zustand store
+  const { streams: storeStreams, activeChatStreamer, layout, setStreams } = useStreamStore();
 
+  // Initialize streams when component mounts or streams change
+  useEffect(() => {
+    setStreams(streams);
+  }, [streams, setStreams]);
+
+  const dimensions = useWindowDimensions(100);
   const rowHeight = useMemo(() => Math.floor(dimensions.height / 12), [dimensions.height]);
 
   return (
@@ -47,14 +53,18 @@ function Watch() {
         isResizable
         margin={[0, 0]}
         containerPadding={[0, 0]}
+        useCSSTransforms
+        transformScale={1}
+        compactType={null}
+        preventCollision
       >
-        {streams.map(streamName => (
+        {storeStreams.map((streamName: string, index: number) => (
           <div key={`stream-${streamName}`}>
-            <StreamGridItem streamName={streamName} />
+            <StreamGridItem streamName={streamName} streamIndex={index} />
           </div>
         ))}
-        <div key={`chat-${streams[0]}`}>
-          <StreamGridItem streamName={streams[0]} isChat isDarkThemePreferred={isDarkThemePreferred} />
+        <div key={`chat-${activeChatStreamer}`}>
+          <StreamGridItem streamName={activeChatStreamer} isChat isDarkThemePreferred={isDarkThemePreferred} />
         </div>
       </ReactGridLayout>
     </div>

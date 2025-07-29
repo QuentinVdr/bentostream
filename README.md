@@ -4,16 +4,18 @@ A simple project to be an alternative to the multistre.am with a modular interfa
 
 ## TODO / Planned Features
 
-- [ ] Swap stream positions
+- [x] Swap stream positions
   - [ ] Drag and drop to swap streams
-- [ ] Swap streams chats
+- [x] Swap streams chats
 - [ ] Add/remove streams chat
 - [ ] Hide/show streams
 - [ ] Persist swap state in URL parameters
 - [ ] Custom layouts saving
 - [ ] Stream favorites/bookmarks
 - [ ] Picture-in-picture mode
+- [x] Add twitch support
 - [ ] Add youtube support
+- [ ] Add kick support
 
 ## Development
 

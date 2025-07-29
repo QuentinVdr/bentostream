@@ -1,17 +1,29 @@
 @import 'tailwindcss';
 
+.transition-margin {
+  transition-property: margin;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
 .react-grid-layout {
   position: relative;
 }
 
 .react-grid-item {
-  transition: all 200ms ease;
-  transition-property: left, top;
+  transition: all 200ms ease-out;
+  transition-property: left, top, transform;
   border: 1px solid transparent;
+  will-change: transform;
+  transform: translateZ(0); /* Force GPU acceleration */
 }
 
 .react-grid-item.cssTransforms {
   transition-property: transform;
+  transition-duration: 200ms;
+  transition-timing-function: ease-out;
+  will-change: transform;
+  transform: translateZ(0); /* Force GPU acceleration */
 }
 
 .react-grid-item > .react-resizable-handle {
