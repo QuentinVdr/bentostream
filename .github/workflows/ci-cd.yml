@@ -160,8 +160,8 @@ jobs:
           path: dist/
           retention-days: 1
 
-  deploy:
-    name: Docker Build & Deploy
+  docker-build:
+    name: Docker Build & Push
     runs-on: ubuntu-latest
     needs: [install, format, lint, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -211,8 +211,28 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  deploy:
+    name: Deploy to Coolify
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
       - name: Trigger Coolify Deployment
         run: |
-          curl -X POST "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
+          response=$(curl -s -w "%{http_code}" -X POST "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
             -H "Content-Type: application/json" \
-            -d '{"force": true}'
+            -d '{"branch": "main", "force": true}')
+
+          echo "Webhook response: $response"
+
+          # Extract HTTP status code (last 3 characters)
+          status_code="${response: -3}"
+
+          if [[ "$status_code" =~ ^[23][0-9][0-9]$ ]]; then
+            echo "✅ Deployment triggered successfully (Status: $status_code)"
+          else
+            echo "❌ Deployment webhook failed (Status: $status_code)"
+            echo "Response body: ${response%???}"
+            exit 1
+          fi
