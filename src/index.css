@@ -1,5 +1,14 @@
 @import 'tailwindcss';
 
+@layer components {
+  body {
+    background-color: var(--color-zinc-950);
+    color: var(--color-white);
+    min-height: 100dvh;
+    width: 100dvw;
+  }
+}
+
 .transition-margin {
   transition-property: margin;
   transition-duration: 300ms;
