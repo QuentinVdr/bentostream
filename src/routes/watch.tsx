@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
 import { useEffect, useMemo } from 'react';
-import RGL, { WidthProvider } from 'react-grid-layout';
+import RGL, { WidthProvider, type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import StreamGridItem from '../components/StreamGridItem/StreamGridItem';
@@ -30,13 +30,15 @@ function Watch() {
   const { streams } = Route.useSearch();
   const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-  // Zustand store
-  const { streams: storeStreams, activeChatStreamer, layout, setStreams } = useStreamStore();
+  const { streams: storeStreams, activeChatStreamer, layout, setStreams, updateLayout } = useStreamStore();
 
-  // Initialize streams when component mounts or streams change
   useEffect(() => {
     setStreams(streams);
   }, [streams, setStreams]);
+
+  const handleLayoutChange = (newLayout: Layout[]) => {
+    updateLayout(newLayout);
+  };
 
   const dimensions = useWindowDimensions(100);
   const rowHeight = useMemo(() => Math.floor(dimensions.height / 12), [dimensions.height]);
@@ -57,6 +59,7 @@ function Watch() {
         transformScale={1}
         compactType={null}
         preventCollision
+        onLayoutChange={handleLayoutChange}
       >
         {storeStreams.map((streamName: string, index: number) => (
           <div key={`stream-${streamName}`}>

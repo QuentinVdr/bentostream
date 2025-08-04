@@ -22,7 +22,6 @@ export const useStreamManager = (initialStreams: string[]): UseStreamManagerRetu
   const [streamOrder, setStreamOrder] = useState<string[]>(initialStreams);
   const [activeChatStreamer, setActiveChatStreamer] = useState<string>(initialStreams[0] || '');
 
-  // Swap streams by index
   const swapStreams = useCallback((indexA: number, indexB: number) => {
     setStreamOrder(current => {
       if (indexA < 0 || indexB < 0 || indexA >= current.length || indexB >= current.length) {
@@ -34,7 +33,6 @@ export const useStreamManager = (initialStreams: string[]): UseStreamManagerRetu
     });
   }, []);
 
-  // Swap streams by name
   const swapStreamsByName = useCallback((streamA: string, streamB: string) => {
     setStreamOrder(current => {
       const indexA = current.indexOf(streamA);
@@ -50,7 +48,6 @@ export const useStreamManager = (initialStreams: string[]): UseStreamManagerRetu
     });
   }, []);
 
-  // Move a stream to a specific position
   const moveStreamToPosition = useCallback((streamName: string, newIndex: number) => {
     setStreamOrder(current => {
       const currentIndex = current.indexOf(streamName);
@@ -65,7 +62,6 @@ export const useStreamManager = (initialStreams: string[]): UseStreamManagerRetu
     });
   }, []);
 
-  // Change which streamer's chat is displayed
   const changeChatStreamer = useCallback(
     (streamerName: string) => {
       if (streamOrder.includes(streamerName)) {
@@ -75,13 +71,11 @@ export const useStreamManager = (initialStreams: string[]): UseStreamManagerRetu
     [streamOrder]
   );
 
-  // Reset to initial order
   const resetToInitialOrder = useCallback(() => {
     setStreamOrder(initialStreams);
     setActiveChatStreamer(initialStreams[0] || '');
   }, [initialStreams]);
 
-  // Helper functions
   const getStreamIndex = useCallback(
     (streamName: string) => {
       return streamOrder.indexOf(streamName);
@@ -96,7 +90,6 @@ export const useStreamManager = (initialStreams: string[]): UseStreamManagerRetu
     [activeChatStreamer]
   );
 
-  // Update activeChatStreamer if it's no longer in the stream list
   useMemo(() => {
     if (activeChatStreamer && !streamOrder.includes(activeChatStreamer)) {
       setActiveChatStreamer(streamOrder[0] || '');

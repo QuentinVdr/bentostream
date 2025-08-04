@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useStreamStore } from '../../stores/streamStore';
 
 interface StreamGridItemProps {
@@ -11,31 +11,11 @@ interface StreamGridItemProps {
 const StreamGridItem = memo(
   ({ streamName, isChat = false, isDarkThemePreferred = false, streamIndex }: StreamGridItemProps) => {
     const [isTitleHovered, setIsTitleHovered] = useState(false);
-    const [showChatDropdown, setShowChatDropdown] = useState(false);
-    const [showSwapDropdown, setShowSwapDropdown] = useState(false);
-    const chatDropdownRef = useRef<HTMLDivElement>(null);
-    const swapDropdownRef = useRef<HTMLDivElement>(null);
 
     const { swapStreamsByName, changeChatStreamer, getAvailableChatStreamers, getAvailableSwapStreams } =
       useStreamStore();
 
     const title = useMemo(() => (isChat ? `Chat: ${streamName}` : `Stream: ${streamName}`), [isChat, streamName]);
-
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (chatDropdownRef.current && !chatDropdownRef.current.contains(event.target as Node)) {
-          setShowChatDropdown(false);
-        }
-        if (swapDropdownRef.current && !swapDropdownRef.current.contains(event.target as Node)) {
-          setShowSwapDropdown(false);
-        }
-      };
-
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }, []);
 
     const iframeSrc = useMemo(() => {
       if (isChat) {
@@ -45,25 +25,15 @@ const StreamGridItem = memo(
       return `https://player.twitch.tv/?channel=${streamName}&parent=${window.location.hostname}`;
     }, [streamName, isChat, isDarkThemePreferred]);
 
-    const handleChatChange = (newChatStreamer?: string) => {
+    const handleChatChange = (newChatStreamer: string) => {
       if (isChat) {
-        if (newChatStreamer) {
-          changeChatStreamer(newChatStreamer);
-          setShowChatDropdown(false);
-        } else {
-          setShowChatDropdown(!showChatDropdown);
-        }
+        changeChatStreamer(newChatStreamer);
       }
     };
 
-    const handleStreamSwap = (targetStreamName?: string) => {
+    const handleStreamSwap = (targetStreamName: string) => {
       if (!isChat && typeof streamIndex === 'number') {
-        if (targetStreamName) {
-          swapStreamsByName(streamName, targetStreamName);
-          setShowSwapDropdown(false);
-        } else {
-          setShowSwapDropdown(!showSwapDropdown);
-        }
+        swapStreamsByName(streamName, targetStreamName);
       }
     };
 
@@ -87,57 +57,51 @@ const StreamGridItem = memo(
             <h2 className="text-base font-semibold text-white">{title}</h2>
             <div className="mt-1 flex justify-center gap-2">
               {isChat && (
-                <div className="relative" ref={chatDropdownRef}>
+                <div className="group/chat relative">
                   <button
-                    onClick={() => handleChatChange()}
                     onMouseDown={e => e.stopPropagation()}
-                    className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                    className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                     type="button"
                   >
                     Switch Chat ▼
                   </button>
-                  {showChatDropdown && (
-                    <div className="absolute top-full left-0 z-20 mt-1 w-32 rounded border border-gray-600 bg-zinc-800 shadow-lg">
-                      {availableChatStreamers.map((streamer: string) => (
-                        <button
-                          key={streamer}
-                          onClick={() => handleChatChange(streamer)}
-                          onMouseDown={e => e.stopPropagation()}
-                          className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-zinc-700"
-                          type="button"
-                        >
-                          {streamer}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div className="invisible absolute top-full left-0 z-20 mt-1 w-32 rounded border border-gray-600 bg-zinc-800 opacity-0 shadow-lg transition-all duration-200 group-focus-within/chat:visible group-focus-within/chat:opacity-100 group-hover/chat:visible group-hover/chat:opacity-100">
+                    {availableChatStreamers.map((streamer: string) => (
+                      <button
+                        key={streamer}
+                        onClick={() => handleChatChange(streamer)}
+                        onMouseDown={e => e.stopPropagation()}
+                        className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-zinc-700 focus:bg-zinc-700 focus:outline-none"
+                        type="button"
+                      >
+                        {streamer}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
               {!isChat && typeof streamIndex === 'number' && (
-                <div className="relative" ref={swapDropdownRef}>
+                <div className="group/swap relative">
                   <button
-                    onClick={() => handleStreamSwap()}
                     onMouseDown={e => e.stopPropagation()}
                     className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
                     type="button"
                   >
                     Swap ▼
                   </button>
-                  {showSwapDropdown && (
-                    <div className="absolute top-full left-0 z-20 mt-1 w-32 rounded border border-gray-600 bg-zinc-800 shadow-lg">
-                      {availableSwapStreams.map((targetStream: string) => (
-                        <button
-                          key={targetStream}
-                          onClick={() => handleStreamSwap(targetStream)}
-                          onMouseDown={e => e.stopPropagation()}
-                          className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-zinc-700"
-                          type="button"
-                        >
-                          Swap with {targetStream}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div className="invisible absolute top-full left-0 z-20 mt-1 w-32 rounded border border-gray-600 bg-zinc-800 opacity-0 shadow-lg transition-all duration-200 group-hover/swap:visible group-hover/swap:opacity-100">
+                    {availableSwapStreams.map((targetStream: string) => (
+                      <button
+                        key={targetStream}
+                        onClick={() => handleStreamSwap(targetStream)}
+                        onMouseDown={e => e.stopPropagation()}
+                        className="block w-full px-3 py-2 text-left text-xs text-white hover:bg-zinc-700"
+                        type="button"
+                      >
+                        Swap with {targetStream}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
