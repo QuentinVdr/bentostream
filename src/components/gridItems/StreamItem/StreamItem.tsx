@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo } from 'react';
 import { useStreamStore } from '../../../stores/streamStore';
-import Dropdown from '../../Dropdown/Dropdown';
+import Dropdown from '../../global/Dropdown/Dropdown';
 import GridItem from '../GridItem/GridItem';
 
 interface StreamItemProps {

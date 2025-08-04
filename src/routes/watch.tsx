@@ -3,8 +3,8 @@ import { useEffect, useMemo } from 'react';
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import ChatItem from '../components/GridItems/ChatItem/ChatItem';
-import StreamItem from '../components/GridItems/StreamItem/StreamItem';
+import ChatItem from '../components/gridItems/ChatItem/ChatItem';
+import StreamItem from '../components/gridItems/StreamItem/StreamItem';
 import { useWindowDimensions } from '../hooks/useWindowDimensions';
 import { useStreamStore } from '../stores/streamStore';
 
