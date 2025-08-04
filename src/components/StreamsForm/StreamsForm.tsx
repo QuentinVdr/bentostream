@@ -102,7 +102,7 @@ const StreamsForm = ({ onSubmit }: StreamsFormProps) => {
               onBlur={cleanInputs}
               data-index={index}
               placeholder={`${'Enter stream URL...'} ${index + 1}`}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-violet-500 focus:outline-none"
             />
             {index > 0 && input.value === '' && (
               <button
@@ -121,7 +121,7 @@ const StreamsForm = ({ onSubmit }: StreamsFormProps) => {
           <div className="flex gap-3 pt-4">
             <button
               type="submit"
-              className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:outline-none"
+              className="flex-1 rounded-lg bg-violet-600 px-6 py-3 font-medium text-white transition-colors duration-200 hover:bg-violet-700 focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:outline-none"
             >
               Watch Streams ({validInputs.length})
             </button>

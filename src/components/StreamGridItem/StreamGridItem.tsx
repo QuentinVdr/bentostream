@@ -60,7 +60,7 @@ const StreamGridItem = memo(
                 <div className="group/chat relative">
                   <button
                     onMouseDown={e => e.stopPropagation()}
-                    className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="rounded bg-violet-600 px-2 py-1 text-xs text-white hover:bg-violet-700 focus:ring-2 focus:ring-violet-500 focus:outline-none"
                     type="button"
                   >
                     Switch Chat ▼
@@ -84,7 +84,7 @@ const StreamGridItem = memo(
                 <div className="group/swap relative">
                   <button
                     onMouseDown={e => e.stopPropagation()}
-                    className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+                    className="rounded bg-violet-600 px-2 py-1 text-xs text-white hover:bg-violet-700"
                     type="button"
                   >
                     Swap ▼
