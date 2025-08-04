@@ -53,6 +53,7 @@ function Watch() {
         width={dimensions.width}
         isDraggable
         isResizable
+        resizeHandles={['se', 'sw', 'ne', 'nw']}
         margin={[0, 0]}
         containerPadding={[0, 0]}
         useCSSTransforms
