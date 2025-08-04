@@ -35,29 +35,21 @@
   transform: translateZ(0); /* Force GPU acceleration */
 }
 
-.react-grid-item > .react-resizable-handle {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  bottom: 0;
-  right: 0;
-  background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNiIgaGVpZ2h0PSI2IiB2aWV3Qm94PSIwIDAgNiA2IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxnIGZpbGw9IiM0NDQiIGZpbGwtcnVsZT0iZXZlbm9kZCI+PHBhdGggZD0ibTUgNWgtNHYtNGg0eiIvPjwvZz48L3N2Zz4=');
-  background-position: bottom right;
-  padding: 0 3px 3px 0;
-  background-repeat: no-repeat;
-  background-origin: content-box;
-  box-sizing: border-box;
-  cursor: se-resize;
-  z-index: 10;
+.react-resizable-handle::after {
+  border-color: var(--color-zinc-600) !important;
 }
 
-.react-grid-item > .react-resizable-handle::after {
-  content: '';
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
-  width: 5px;
-  height: 5px;
-  border-right: 2px solid rgba(255, 255, 255, 0.8);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.8);
+/* Position all resize handles above the header */
+.react-resizable-handle {
+  z-index: 30 !important;
+}
+
+/* Specifically target the north (top) handle */
+.react-resizable-handle-n {
+  z-index: 30 !important;
+}
+
+/* Ensure header has lower z-index than resize handles */
+.react-grid-item .group {
+  position: relative;
 }

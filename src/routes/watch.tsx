@@ -3,7 +3,8 @@ import { useEffect, useMemo } from 'react';
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import StreamGridItem from '../components/StreamGridItem/StreamGridItem';
+import ChatItem from '../components/GridItems/ChatItem/ChatItem';
+import StreamItem from '../components/GridItems/StreamItem/StreamItem';
 import { useWindowDimensions } from '../hooks/useWindowDimensions';
 import { useStreamStore } from '../stores/streamStore';
 
@@ -63,12 +64,12 @@ function Watch() {
       >
         {storeStreams.map((streamName: string) => (
           <div key={`stream-${streamName}`}>
-            <StreamGridItem streamName={streamName} />
+            <StreamItem streamName={streamName} />
           </div>
         ))}
         {storeStreams.map((streamName: string) => (
           <div key={`chat-${streamName}`} className={isActiveChat(streamName) ? '' : 'hidden'}>
-            <StreamGridItem streamName={streamName} isChat isDarkThemePreferred={isDarkThemePreferred} />
+            <ChatItem streamName={streamName} isDarkThemePreferred={isDarkThemePreferred} />
           </div>
         ))}
       </ReactGridLayout>
