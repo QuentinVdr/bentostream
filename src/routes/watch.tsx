@@ -61,14 +61,12 @@ function Watch() {
         preventCollision
         onLayoutChange={handleLayoutChange}
       >
-        {storeStreams.map((streamName: string, index: number) => (
+        {storeStreams.map((streamName: string) => (
           <div key={`stream-${streamName}`}>
-            <StreamGridItem streamName={streamName} streamIndex={index} />
+            <StreamGridItem streamName={streamName} />
           </div>
         ))}
-        <div key={`chat-${activeChatStreamer}`}>
-          <StreamGridItem streamName={activeChatStreamer} isChat isDarkThemePreferred={isDarkThemePreferred} />
-        </div>
+            <StreamGridItem streamName={streamName} isChat isDarkThemePreferred={isDarkThemePreferred} />
       </ReactGridLayout>
     </div>
   );
