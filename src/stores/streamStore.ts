@@ -15,6 +15,7 @@ interface StreamStore {
 
   getAvailableChatStreamers: (excludeStreamer?: string) => string[];
   getAvailableSwapStreams: (excludeStreamer: string) => string[];
+  isActiveChat: (stream: string) => boolean;
 }
 
 const generateLayout = (streams: string[]): Layout[] => {
@@ -283,17 +284,7 @@ export const useStreamStore = create<StreamStore>()(
       },
 
       updateLayout: (layout: Layout[]) => {
-        const state = get();
-        const hiddenChatsStream = state.streams.filter(stream => stream !== state.activeChatStreamer);
-        const hiddenChatsLayout = hiddenChatsStream.map(stream => ({
-          i: `chat-${stream}`,
-          x: 0,
-          y: 0,
-          w: 0,
-          h: 0,
-        }));
-        const finalLayout = [...layout, ...hiddenChatsLayout];
-        set({ layout: finalLayout });
+        set({ layout });
       },
 
       swapItemByName: (nameA: string, nameB: string) => {
@@ -339,6 +330,10 @@ export const useStreamStore = create<StreamStore>()(
 
       getAvailableSwapStreams: (excludeStreamer: string) => {
         return get().streams.filter((s: string) => s !== excludeStreamer);
+      },
+
+      isActiveChat: (stream: string) => {
+        return get().activeChatStreamer === stream;
       },
     }),
     {

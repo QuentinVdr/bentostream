@@ -30,7 +30,7 @@ function Watch() {
   const { streams } = Route.useSearch();
   const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-  const { streams: storeStreams, activeChatStreamer, layout, setStreams, updateLayout } = useStreamStore();
+  const { streams: storeStreams, layout, setStreams, updateLayout, isActiveChat } = useStreamStore();
 
   useEffect(() => {
     setStreams(streams);
@@ -57,8 +57,7 @@ function Watch() {
         containerPadding={[0, 0]}
         useCSSTransforms
         transformScale={1}
-        compactType={null}
-        preventCollision
+        verticalCompact
         onLayoutChange={handleLayoutChange}
       >
         {storeStreams.map((streamName: string) => (
@@ -66,7 +65,11 @@ function Watch() {
             <StreamGridItem streamName={streamName} />
           </div>
         ))}
+        {storeStreams.map((streamName: string) => (
+          <div key={`chat-${streamName}`} className={isActiveChat(streamName) ? '' : 'hidden'}>
             <StreamGridItem streamName={streamName} isChat isDarkThemePreferred={isDarkThemePreferred} />
+          </div>
+        ))}
       </ReactGridLayout>
     </div>
   );
