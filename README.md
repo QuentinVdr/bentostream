@@ -8,7 +8,7 @@ A simple project to be an alternative to the multistre.am with a modular interfa
   - [ ] Drag and drop to swap streams
 - [x] Swap streams chats
 - [ ] Add/remove streams chat
-- [ ] Hide/show streams
+- [x] Hide/show streams
 - [ ] Persist swap state in URL parameters
 - [ ] Custom layouts saving
 - [ ] Stream favorites/bookmarks

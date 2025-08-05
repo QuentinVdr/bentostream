@@ -5,6 +5,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import ChatItem from '../components/gridItems/ChatItem/ChatItem';
 import StreamItem from '../components/gridItems/StreamItem/StreamItem';
+import GridToolsBar from '../components/GridToolsBar/GridToolsBar';
 import { useWindowDimensions } from '../hooks/useWindowDimensions';
 import { useStreamStore } from '../stores/streamStore';
 
@@ -31,7 +32,14 @@ function Watch() {
   const { streams } = Route.useSearch();
   const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-  const { streams: storeStreams, layout, setStreams, updateLayout, isActiveChat } = useStreamStore();
+  const {
+    streams: storeStreams,
+    setStreams,
+    updateLayout,
+    isActiveChat,
+    isStreamHidden,
+    visibleLayout,
+  } = useStreamStore();
 
   useEffect(() => {
     setStreams(streams);
@@ -46,9 +54,10 @@ function Watch() {
 
   return (
     <div className="h-dvh w-dvw">
+      <GridToolsBar />
       <ReactGridLayout
         className="layout"
-        layout={layout}
+        layout={visibleLayout}
         cols={12}
         rowHeight={rowHeight}
         width={dimensions.width}
@@ -63,7 +72,7 @@ function Watch() {
         onLayoutChange={handleLayoutChange}
       >
         {storeStreams.map((streamName: string) => (
-          <div key={`stream-${streamName}`}>
+          <div key={`stream-${streamName}`} className={isStreamHidden(streamName) ? 'hidden' : ''}>
             <StreamItem streamName={streamName} />
           </div>
         ))}
