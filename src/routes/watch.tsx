@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo } from 'react';
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
@@ -16,7 +16,7 @@ export const Route = createFileRoute('/watch')({
     };
   },
   beforeLoad: ({ search }) => {
-    const streams = search.streams as string[];
+    const streams = search.streams;
     if (!streams || streams.length === 0) {
       throw redirect({
         to: '/',
@@ -30,6 +30,7 @@ const ReactGridLayout = WidthProvider(RGL);
 
 function Watch() {
   const { streams } = Route.useSearch();
+  const navigate = useNavigate();
   const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
   const {
@@ -37,9 +38,19 @@ function Watch() {
     setStreams,
     updateLayout,
     isActiveChat,
-    isStreamHidden,
-    visibleLayout,
+    layout,
+    setOnStreamsChange,
   } = useStreamStore();
+
+  useEffect(() => {
+    setOnStreamsChange((newStreams: string[]) => {
+      navigate({
+        to: '/watch',
+        search: { streams: newStreams },
+        replace: true,
+      });
+    });
+  }, [navigate, setOnStreamsChange]);
 
   useEffect(() => {
     setStreams(streams);
@@ -54,10 +65,10 @@ function Watch() {
 
   return (
     <div className="h-dvh w-dvw">
-      <GridToolsBar />
+      <GridToolsBar key={`toolbar-${storeStreams.join('-')}`} />
       <ReactGridLayout
         className="layout"
-        layout={visibleLayout}
+        layout={layout}
         cols={12}
         rowHeight={rowHeight}
         width={dimensions.width}
@@ -72,7 +83,7 @@ function Watch() {
         onLayoutChange={handleLayoutChange}
       >
         {storeStreams.map((streamName: string) => (
-          <div key={`stream-${streamName}`} className={isStreamHidden(streamName) ? 'hidden' : ''}>
+          <div key={`stream-${streamName}`}>
             <StreamItem streamName={streamName} />
           </div>
         ))}

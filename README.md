@@ -7,9 +7,10 @@ A simple project to be an alternative to the multistre.am with a modular interfa
 - [x] Swap stream positions
   - [ ] Drag and drop to swap streams
 - [x] Swap streams chats
+- [x] Dynamically change streams
 - [ ] Add/remove streams chat
-- [x] Hide/show streams
-- [ ] Persist swap state in URL parameters
+- [ ] Hide/show streams
+- [x] Persist swap state in URL parameters
 - [ ] Custom layouts saving
 - [ ] Stream favorites/bookmarks
 - [ ] Picture-in-picture mode

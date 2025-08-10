@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useStreamStore } from '../../../stores/streamStore';
 import Dropdown from '../../global/Dropdown/Dropdown';
 import GridItem from '../GridItem/GridItem';
@@ -8,8 +8,8 @@ interface ChatItemProps {
   isDarkThemePreferred?: boolean;
 }
 
-const ChatItem = memo(({ streamName, isDarkThemePreferred = false }: ChatItemProps) => {
-  const { changeChatStreamer, getAvailableChatStreamers } = useStreamStore();
+const ChatItem = ({ streamName, isDarkThemePreferred = false }: ChatItemProps) => {
+  const { changeChatStreamer, streams } = useStreamStore();
 
   const title = `Chat: ${streamName}`;
 
@@ -25,10 +25,7 @@ const ChatItem = memo(({ streamName, isDarkThemePreferred = false }: ChatItemPro
     [changeChatStreamer]
   );
 
-  const availableChatStreamers = useMemo(
-    () => getAvailableChatStreamers(streamName),
-    [getAvailableChatStreamers, streamName]
-  );
+  const availableChatStreamers = useMemo(() => streams.filter(s => s !== streamName), [streams, streamName]);
 
   const chatDropdownItems = useMemo(
     () =>
@@ -45,11 +42,11 @@ const ChatItem = memo(({ streamName, isDarkThemePreferred = false }: ChatItemPro
       title={title}
       iframeSrc={iframeSrc}
       allowFullScreen={false}
-      headerActions={<Dropdown buttonLabel="Switch Chat" items={chatDropdownItems} />}
+      headerActions={
+        <Dropdown key={`chat-${streamName}-${streams.join('-')}`} buttonLabel="Switch Chat" items={chatDropdownItems} />
+      }
     />
   );
-});
-
-ChatItem.displayName = 'ChatItem';
+};
 
 export default ChatItem;

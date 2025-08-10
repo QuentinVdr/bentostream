@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useStreamStore } from '../../../stores/streamStore';
 import Dropdown from '../../global/Dropdown/Dropdown';
 import GridItem from '../GridItem/GridItem';
@@ -7,8 +7,8 @@ interface StreamItemProps {
   streamName: string;
 }
 
-const StreamItem = memo(({ streamName }: StreamItemProps) => {
-  const { swapStreamsByName, getAvailableSwapStreams } = useStreamStore();
+const StreamItem = ({ streamName }: StreamItemProps) => {
+  const { swapStreamsByName, streams } = useStreamStore();
 
   const title = `Stream: ${streamName}`;
 
@@ -21,10 +21,7 @@ const StreamItem = memo(({ streamName }: StreamItemProps) => {
     [swapStreamsByName, streamName]
   );
 
-  const availableSwapStreams = useMemo(
-    () => getAvailableSwapStreams(streamName),
-    [getAvailableSwapStreams, streamName]
-  );
+  const availableSwapStreams = useMemo(() => streams.filter(s => s !== streamName), [streams, streamName]);
 
   const swapDropdownItems = useMemo(
     () =>
@@ -41,11 +38,11 @@ const StreamItem = memo(({ streamName }: StreamItemProps) => {
       title={title}
       iframeSrc={iframeSrc}
       allowFullScreen={true}
-      headerActions={<Dropdown buttonLabel="Swap" items={swapDropdownItems} />}
+      headerActions={
+        <Dropdown key={`swap-${streamName}-${streams.join('-')}`} buttonLabel="Swap" items={swapDropdownItems} />
+      }
     />
   );
-});
-
-StreamItem.displayName = 'StreamItem';
+};
 
 export default StreamItem;

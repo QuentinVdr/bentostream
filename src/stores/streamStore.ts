@@ -6,24 +6,18 @@ interface StreamStore {
   streams: string[];
   activeChatStreamer: string;
   layout: Layout[];
-  hiddenStreams: Set<string>;
-  visibleLayout: Layout[];
+  onStreamsChange?: (streams: string[]) => void;
 
   setStreams: (streams: string[]) => void;
+  addStream: (streamName: string) => void;
+  removeStream: (streamName: string) => void;
   updateLayout: (layout: Layout[]) => void;
   swapStreamsByName: (nameA: string, nameB: string) => void;
   swapItemByName: (nameA: string, nameB: string) => void;
   changeChatStreamer: (streamer: string) => void;
-  toggleStreamVisibility: (streamName: string) => void;
-  showAllStreams: () => void;
-  hideAllStreams: () => void;
+  setOnStreamsChange: (callback: (streams: string[]) => void) => void;
 
-  getAvailableChatStreamers: (excludeStreamer?: string) => string[];
-  getAvailableSwapStreams: (excludeStreamer: string) => string[];
   isActiveChat: (stream: string) => boolean;
-  isStreamHidden: (streamName: string) => boolean;
-  getVisibleStreams: () => string[];
-  getVisibleLayout: () => Layout[];
 }
 
 const generateLayout = (streams: string[]): Layout[] => {
@@ -276,63 +270,43 @@ const generateLayout = (streams: string[]): Layout[] => {
   return layout;
 };
 
-const generateVisibleLayout = (hiddenStreams: Set<string>, fullLayout: Layout[]): Layout[] => {
-  return fullLayout.map(item => {
-    if (item.i.startsWith('stream-')) {
-      const streamName = item.i.replace('stream-', '');
-      if (hiddenStreams.has(streamName)) {
-        // Hide by setting dimensions to 0 but keep in layout
-        return { ...item, w: 0, h: 0 };
-      }
-    }
-    return item;
-  });
-};
-
 export const useStreamStore = create<StreamStore>()(
   devtools(
     (set, get) => ({
       streams: [],
       activeChatStreamer: '',
       layout: [],
-      hiddenStreams: new Set(),
-      visibleLayout: [],
+      onStreamsChange: undefined,
 
       setStreams: (streams: string[]) => {
-        const fullLayout = generateLayout(streams);
-        const visibleLayout = generateVisibleLayout(new Set(), fullLayout);
+        const state = get();
+
+        // Skip update if streams are the same (ignore order)
+        if (state.streams.length > 0) {
+          if (
+            JSON.stringify([...state.streams].sort((a, b) => a.localeCompare(b))) ===
+            JSON.stringify([...streams].sort((a, b) => a.localeCompare(b)))
+          ) {
+            return;
+          }
+        }
+
+        let newActiveChatStreamer = state.activeChatStreamer;
+        if (!state.activeChatStreamer || !streams.includes(state.activeChatStreamer)) {
+          newActiveChatStreamer = streams.length > 0 ? streams[0] : '';
+        }
+
+        const layout = generateLayout(streams);
         set({
           streams: streams,
-          activeChatStreamer: streams[0] || '',
-          layout: fullLayout,
-          hiddenStreams: new Set(),
-          visibleLayout: visibleLayout,
+          activeChatStreamer: newActiveChatStreamer,
+          layout: layout,
         });
       },
 
       updateLayout: (newLayout: Layout[]) => {
-        const state = get();
-        // If we're updating the visible layout, we need to merge it back into the full layout
-        // But we need to be careful not to overwrite hidden stream dimensions
-        const updatedFullLayout = state.layout.map(item => {
-          const visibleItem = newLayout.find(vItem => vItem.i === item.i);
-          if (visibleItem) {
-            // If this is a hidden stream with 0 dimensions, don't update it
-            if (item.i.startsWith('stream-')) {
-              const streamName = item.i.replace('stream-', '');
-              if (state.hiddenStreams.has(streamName) && visibleItem.w === 0 && visibleItem.h === 0) {
-                return item; // Keep original layout for hidden stream
-              }
-            }
-            return visibleItem;
-          }
-          return item;
-        });
-
-        const newVisibleLayout = generateVisibleLayout(state.hiddenStreams, updatedFullLayout);
         set({
-          layout: updatedFullLayout,
-          visibleLayout: newVisibleLayout,
+          layout: newLayout,
         });
       },
 
@@ -355,17 +329,33 @@ export const useStreamStore = create<StreamStore>()(
           return item;
         });
 
-        const newVisibleLayout = generateVisibleLayout(state.hiddenStreams, newLayout);
         set({
           layout: newLayout,
-          visibleLayout: newVisibleLayout,
         });
       },
 
       swapStreamsByName: (nameA: string, nameB: string) => {
-        get().swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
-      },
+        const state = get();
 
+        // Just swap the layout items, don't change streams array
+        get().swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
+
+        // Update URL with the new logical order based on layout positions
+        if (state.onStreamsChange) {
+          // Get the current layout and determine new stream order based on positions
+          const currentLayout = get().layout;
+          const streamLayouts = currentLayout
+            .filter(item => item.i.startsWith('stream-'))
+            .sort((a, b) => {
+              // Sort by position (top-left to bottom-right)
+              if (a.y !== b.y) return a.y - b.y;
+              return a.x - b.x;
+            })
+            .map(item => item.i.replace('stream-', ''));
+
+          state.onStreamsChange(streamLayouts);
+        }
+      },
       changeChatStreamer: (streamer: string) => {
         const state = get();
         if (state.streams.includes(streamer) && streamer !== state.activeChatStreamer) {
@@ -376,66 +366,49 @@ export const useStreamStore = create<StreamStore>()(
         }
       },
 
-      toggleStreamVisibility: (streamName: string) => {
-        const state = get();
-        const newHiddenStreams = new Set(state.hiddenStreams);
-
-        if (newHiddenStreams.has(streamName)) {
-          newHiddenStreams.delete(streamName);
-        } else {
-          newHiddenStreams.add(streamName);
-        }
-
-        const newVisibleLayout = generateVisibleLayout(newHiddenStreams, state.layout);
-        set({
-          hiddenStreams: newHiddenStreams,
-          visibleLayout: newVisibleLayout,
-        });
-      },
-
-      showAllStreams: () => {
-        const state = get();
-        const newVisibleLayout = generateVisibleLayout(new Set(), state.layout);
-        set({
-          hiddenStreams: new Set(),
-          visibleLayout: newVisibleLayout,
-        });
-      },
-
-      hideAllStreams: () => {
-        const state = get();
-        // Hide all streams
-        const newHiddenStreams = new Set(state.streams);
-        const newVisibleLayout = generateVisibleLayout(newHiddenStreams, state.layout);
-        set({
-          hiddenStreams: newHiddenStreams,
-          visibleLayout: newVisibleLayout,
-        });
-      },
-      getAvailableChatStreamers: (excludeStreamer?: string) => {
-        const streams = get().streams;
-        return excludeStreamer ? streams.filter((s: string) => s !== excludeStreamer) : streams;
-      },
-
-      getAvailableSwapStreams: (excludeStreamer: string) => {
-        return get().streams.filter((s: string) => s !== excludeStreamer);
-      },
-
       isActiveChat: (stream: string) => {
         return get().activeChatStreamer === stream;
       },
 
-      isStreamHidden: (streamName: string) => {
-        return get().hiddenStreams.has(streamName);
-      },
-
-      getVisibleStreams: () => {
+      addStream: (streamName: string) => {
         const state = get();
-        return state.streams.filter(stream => !state.hiddenStreams.has(stream));
+        if (!state.streams.includes(streamName)) {
+          const newStreams = [...state.streams, streamName];
+          const newLayout = generateLayout(newStreams);
+
+          const newActiveChatStreamer = state.activeChatStreamer || streamName;
+
+          set({
+            streams: newStreams,
+            activeChatStreamer: newActiveChatStreamer,
+            layout: newLayout,
+          });
+        }
       },
 
-      getVisibleLayout: () => {
-        return get().visibleLayout;
+      removeStream: (streamName: string) => {
+        const state = get();
+        const streamIndex = state.streams.indexOf(streamName);
+        if (streamIndex === -1) return;
+
+        const newStreams = state.streams.filter(s => s !== streamName);
+
+        let newActiveChatStreamer = state.activeChatStreamer;
+        if (state.activeChatStreamer === streamName && newStreams.length > 0) {
+          newActiveChatStreamer = newStreams[0];
+        }
+
+        const newLayout = generateLayout(newStreams);
+
+        set({
+          streams: newStreams,
+          activeChatStreamer: newActiveChatStreamer,
+          layout: newLayout,
+        });
+      },
+
+      setOnStreamsChange: (callback: (streams: string[]) => void) => {
+        set({ onStreamsChange: callback });
       },
     }),
     {
