@@ -9,6 +9,7 @@ interface StreamStore {
   onStreamsChange?: (streams: string[]) => void;
 
   setStreams: (streams: string[]) => void;
+  updateStreams: (streams: string[]) => void;
   addStream: (streamName: string) => void;
   removeStream: (streamName: string) => void;
   updateLayout: (layout: Layout[]) => void;
@@ -20,9 +21,15 @@ interface StreamStore {
   isActiveChat: (stream: string) => boolean;
 }
 
-const generateLayout = (streams: string[]): Layout[] => {
+const generateLayout = (streams: string[], activeChatStreamer: string): Layout[] => {
   const layout: Layout[] = [];
   const streamCount = streams.length;
+
+  if (streamCount === 0) {
+    return layout;
+  }
+
+  const validActiveChatStreamer = streams.includes(activeChatStreamer) ? activeChatStreamer : streams[0];
 
   if (streamCount === 1) {
     layout.push(
@@ -34,7 +41,7 @@ const generateLayout = (streams: string[]): Layout[] => {
         h: 8,
       },
       {
-        i: `chat-${streams[0]}`,
+        i: `chat-${validActiveChatStreamer}`,
         x: 9,
         y: 0,
         w: 3,
@@ -58,7 +65,7 @@ const generateLayout = (streams: string[]): Layout[] => {
         h: 4,
       },
       {
-        i: `chat-${streams[0]}`,
+        i: `chat-${validActiveChatStreamer}`,
         x: 9,
         y: 4,
         w: 3,
@@ -89,7 +96,7 @@ const generateLayout = (streams: string[]): Layout[] => {
         h: 4,
       },
       {
-        i: `chat-${streams[0]}`,
+        i: `chat-${validActiveChatStreamer}`,
         x: 8,
         y: 0,
         w: 4,
@@ -127,7 +134,7 @@ const generateLayout = (streams: string[]): Layout[] => {
         h: 4,
       },
       {
-        i: `chat-${streams[0]}`,
+        i: `chat-${validActiveChatStreamer}`,
         x: 9,
         y: 0,
         w: 3,
@@ -172,7 +179,7 @@ const generateLayout = (streams: string[]): Layout[] => {
         h: 4,
       },
       {
-        i: `chat-${streams[0]}`,
+        i: `chat-${validActiveChatStreamer}`,
         x: 9,
         y: 4,
         w: 3,
@@ -224,47 +231,25 @@ const generateLayout = (streams: string[]): Layout[] => {
         h: 4,
       },
       {
-        i: `chat-${streams[0]}`,
+        i: `chat-${validActiveChatStreamer}`,
         x: 9,
         y: 0,
         w: 3,
         h: 12,
       }
     );
-  } else {
-    const cols = Math.ceil(Math.sqrt(streamCount));
-    const streamWidth = Math.floor(12 / cols);
-
-    streams.forEach((streamName, index) => {
-      const row = Math.floor(index / cols);
-      const col = index % cols;
-      layout.push({
-        i: `stream-${streamName}`,
-        x: col * streamWidth,
-        y: row,
-        w: streamWidth,
-        h: 5,
-      });
-    });
-
-    const chatRow = Math.ceil(streamCount / cols);
-    layout.push({
-      i: `chat-${streams[0]}`,
-      x: 8,
-      y: chatRow,
-      w: 4,
-      h: 4,
-    });
   }
 
-  for (let i = 1; i < streamCount; i++) {
-    layout.push({
-      i: `chat-${streams[i]}`,
-      x: 0,
-      y: 0,
-      w: 0,
-      h: 0,
-    });
+  for (const stream of streams) {
+    if (stream !== validActiveChatStreamer) {
+      layout.push({
+        i: `chat-${stream}`,
+        x: 0,
+        y: 0,
+        w: 0,
+        h: 0,
+      });
+    }
   }
 
   return layout;
@@ -281,7 +266,6 @@ export const useStreamStore = create<StreamStore>()(
       setStreams: (streams: string[]) => {
         const state = get();
 
-        // Skip update if streams are the same (ignore order)
         if (state.streams.length > 0) {
           if (
             JSON.stringify([...state.streams].sort((a, b) => a.localeCompare(b))) ===
@@ -296,12 +280,32 @@ export const useStreamStore = create<StreamStore>()(
           newActiveChatStreamer = streams.length > 0 ? streams[0] : '';
         }
 
-        const layout = generateLayout(streams);
+        const layout = generateLayout(streams, newActiveChatStreamer);
         set({
           streams: streams,
           activeChatStreamer: newActiveChatStreamer,
           layout: layout,
         });
+      },
+
+      updateStreams: (streams: string[]) => {
+        const state = get();
+
+        let newActiveChatStreamer = state.activeChatStreamer;
+        if (!state.activeChatStreamer || !streams.includes(state.activeChatStreamer)) {
+          newActiveChatStreamer = streams.length > 0 ? streams[0] : '';
+        }
+
+        const layout = generateLayout(streams, newActiveChatStreamer);
+        set({
+          streams: streams,
+          activeChatStreamer: newActiveChatStreamer,
+          layout: layout,
+        });
+
+        if (state.onStreamsChange) {
+          state.onStreamsChange(streams);
+        }
       },
 
       updateLayout: (newLayout: Layout[]) => {
@@ -356,6 +360,7 @@ export const useStreamStore = create<StreamStore>()(
           state.onStreamsChange(streamLayouts);
         }
       },
+
       changeChatStreamer: (streamer: string) => {
         const state = get();
         if (state.streams.includes(streamer) && streamer !== state.activeChatStreamer) {
@@ -374,9 +379,8 @@ export const useStreamStore = create<StreamStore>()(
         const state = get();
         if (!state.streams.includes(streamName)) {
           const newStreams = [...state.streams, streamName];
-          const newLayout = generateLayout(newStreams);
-
           const newActiveChatStreamer = state.activeChatStreamer || streamName;
+          const newLayout = generateLayout(newStreams, newActiveChatStreamer);
 
           set({
             streams: newStreams,
@@ -398,7 +402,7 @@ export const useStreamStore = create<StreamStore>()(
           newActiveChatStreamer = newStreams[0];
         }
 
-        const newLayout = generateLayout(newStreams);
+        const newLayout = generateLayout(newStreams, newActiveChatStreamer);
 
         set({
           streams: newStreams,

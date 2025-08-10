@@ -1,12 +1,10 @@
-import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useStreamStore } from '../../stores/streamStore';
 import StreamsFormPopup from '../StreamFormPopup/StreamsFormPopup';
 
 const GridToolsBar = () => {
-  const { streams, setStreams } = useStreamStore();
+  const { streams, updateStreams } = useStreamStore();
 
-  const navigate = useNavigate();
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
 
@@ -23,9 +21,7 @@ const GridToolsBar = () => {
   };
 
   const handleUpdateStreams = (newStreams: string[]) => {
-    setStreams(newStreams);
-    // Update URL to reflect new streams
-    navigate({ to: `/watch`, search: { streams: newStreams }, replace: true });
+    updateStreams(newStreams);
   };
 
   return (
