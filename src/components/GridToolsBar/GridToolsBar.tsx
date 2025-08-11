@@ -63,7 +63,7 @@ const GridToolsBar = () => {
               <div className="flex gap-1">
                 <button
                   onClick={handleEditStreams}
-                  className="rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white transition-all duration-200 hover:scale-105 hover:bg-blue-700 active:scale-95"
+                  className="rounded bg-violet-600 px-2 py-1 text-xs font-medium text-white transition-all duration-200 hover:scale-105 hover:bg-violet-700 active:scale-95"
                   title="Edit streams list"
                 >
                   Edit Streams
