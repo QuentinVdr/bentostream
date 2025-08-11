@@ -286,7 +286,7 @@ const StreamsForm = ({
                     onChange={e => handleInputChange(index, e.target.value)}
                     onKeyDown={e => handleKeyDown(e, index)}
                     {...{ [`data-${inputDataAttribute}`]: index }}
-                    placeholder={`Enter stream URL... ${index + 1}`}
+                    placeholder={`Enter stream name... ${index + 1}`}
                     className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-violet-500 focus:outline-none"
                   />
                   {input.value.trim() !== '' && (

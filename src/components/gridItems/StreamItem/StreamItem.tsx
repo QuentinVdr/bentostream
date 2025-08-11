@@ -37,7 +37,8 @@ const StreamItem = ({ streamName }: StreamItemProps) => {
     <GridItem
       title={title}
       iframeSrc={iframeSrc}
-      allowFullScreen={true}
+      allowFullScreen
+      streamName={streamName}
       headerActions={
         <Dropdown key={`swap-${streamName}-${streams.join('-')}`} buttonLabel="Swap" items={swapDropdownItems} />
       }

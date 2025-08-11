@@ -41,7 +41,7 @@ const ChatItem = ({ streamName, isDarkThemePreferred = false }: ChatItemProps) =
     <GridItem
       title={title}
       iframeSrc={iframeSrc}
-      allowFullScreen={false}
+      streamName={streamName}
       headerActions={
         <Dropdown key={`chat-${streamName}-${streams.join('-')}`} buttonLabel="Switch Chat" items={chatDropdownItems} />
       }

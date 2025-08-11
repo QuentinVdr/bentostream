@@ -4,17 +4,20 @@ import GridItemHeader from '../GridItemHeader/GridItemHeader';
 interface GridItemProps {
   title: string;
   iframeSrc: string;
-  allowFullScreen: boolean;
+  allowFullScreen?: boolean;
   headerActions?: ReactNode;
+  streamName?: string;
 }
 
-const GridItem = memo(({ title, iframeSrc, allowFullScreen, headerActions }: GridItemProps) => {
+const GridItem = memo(({ title, iframeSrc, allowFullScreen, headerActions, streamName }: GridItemProps) => {
   return (
     <section
       className="group flex h-full w-full flex-col flex-nowrap overflow-hidden rounded border border-gray-300/20 bg-zinc-900"
       aria-label={title}
     >
-      <GridItemHeader title={title}>{headerActions}</GridItemHeader>
+      <GridItemHeader title={title} streamName={streamName}>
+        {headerActions}
+      </GridItemHeader>
       <iframe
         title={title}
         src={iframeSrc}
