@@ -1,6 +1,7 @@
 import type { Layout } from 'react-grid-layout';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { swapArrayElements } from '../utils/ArrayUtils';
 
 interface StreamStore {
   streams: string[];
@@ -8,10 +9,7 @@ interface StreamStore {
   layout: Layout[];
   onStreamsChange?: (streams: string[]) => void;
 
-  setStreams: (streams: string[]) => void;
-  updateStreams: (streams: string[]) => void;
-  addStream: (streamName: string) => void;
-  removeStream: (streamName: string) => void;
+  setStreams: (streams: string[], shouldTriggerCallback?: boolean) => void;
   updateLayout: (layout: Layout[]) => void;
   swapStreamsByName: (nameA: string, nameB: string) => void;
   swapItemByName: (nameA: string, nameB: string) => void;
@@ -263,47 +261,58 @@ export const useStreamStore = create<StreamStore>()(
       layout: [],
       onStreamsChange: undefined,
 
-      setStreams: (streams: string[]) => {
+      setStreams: (streams: string[], shouldTriggerCallback = false) => {
         const state = get();
 
-        if (state.streams.length > 0) {
-          if (
-            JSON.stringify([...state.streams].sort((a, b) => a.localeCompare(b))) ===
-            JSON.stringify([...streams].sort((a, b) => a.localeCompare(b)))
-          ) {
-            return;
+        if (JSON.stringify(state.streams) === JSON.stringify(streams)) {
+          return;
+        }
+
+        let newActiveChatStreamer = state.activeChatStreamer;
+        if (!state.activeChatStreamer || !streams.includes(state.activeChatStreamer)) {
+          newActiveChatStreamer = streams.length > 0 ? streams[0] : '';
+        }
+
+        let layout;
+        if (state.streams.length !== streams.length) {
+          layout = generateLayout(streams, newActiveChatStreamer);
+        } else {
+          const streamMapping = new Map<string, string>();
+          for (let i = 0; i < state.streams.length; i++) {
+            streamMapping.set(state.streams[i], streams[i]);
           }
+
+          const streamWithOutChat = streams.filter(s => s !== newActiveChatStreamer);
+
+          layout = state.layout.map((item: Layout) => {
+            const regex = /^(stream-|chat-)(.+)$/;
+            const match = regex.exec(item.i);
+            if (match) {
+              const [, prefix, streamName] = match;
+              if (prefix === 'stream-') {
+                const newStreamName = streamMapping.get(streamName);
+                if (newStreamName && newStreamName !== streamName) {
+                  return { ...item, i: `${prefix}${newStreamName}` };
+                }
+              } else if (prefix === 'chat-') {
+                if (streamName === state.activeChatStreamer) {
+                  return { ...item, i: `${prefix}${newActiveChatStreamer}` };
+                } else {
+                  return { ...item, i: `${prefix}${streamWithOutChat.shift()}` };
+                }
+              }
+            }
+            return item;
+          });
         }
 
-        let newActiveChatStreamer = state.activeChatStreamer;
-        if (!state.activeChatStreamer || !streams.includes(state.activeChatStreamer)) {
-          newActiveChatStreamer = streams.length > 0 ? streams[0] : '';
-        }
-
-        const layout = generateLayout(streams, newActiveChatStreamer);
         set({
           streams: streams,
           activeChatStreamer: newActiveChatStreamer,
           layout: layout,
         });
-      },
 
-      updateStreams: (streams: string[]) => {
-        const state = get();
-
-        let newActiveChatStreamer = state.activeChatStreamer;
-        if (!state.activeChatStreamer || !streams.includes(state.activeChatStreamer)) {
-          newActiveChatStreamer = streams.length > 0 ? streams[0] : '';
-        }
-
-        const layout = generateLayout(streams, newActiveChatStreamer);
-        set({
-          streams: streams,
-          activeChatStreamer: newActiveChatStreamer,
-          layout: layout,
-        });
-
-        if (state.onStreamsChange) {
+        if (shouldTriggerCallback && state.onStreamsChange) {
           state.onStreamsChange(streams);
         }
       },
@@ -317,14 +326,14 @@ export const useStreamStore = create<StreamStore>()(
       swapItemByName: (nameA: string, nameB: string) => {
         const state = get();
 
-        const layoutA = state.layout.find(l => l.i === nameA);
-        const layoutB = state.layout.find(l => l.i === nameB);
+        const layoutA = state.layout.find((l: { i: string }) => l.i === nameA);
+        const layoutB = state.layout.find((l: { i: string }) => l.i === nameB);
 
         if (!layoutA || !layoutB) {
           return;
         }
 
-        const newLayout = state.layout.map(item => {
+        const newLayout = state.layout.map((item: Layout) => {
           if (item.i === nameA) {
             return { ...item, x: layoutB.x, y: layoutB.y, w: layoutB.w, h: layoutB.h };
           } else if (item.i === nameB) {
@@ -341,23 +350,14 @@ export const useStreamStore = create<StreamStore>()(
       swapStreamsByName: (nameA: string, nameB: string) => {
         const state = get();
 
-        // Just swap the layout items, don't change streams array
-        get().swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
+        state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
 
-        // Update URL with the new logical order based on layout positions
+        swapArrayElements(state.streams, nameA, nameB);
+        set({
+          streams: state.streams,
+        });
         if (state.onStreamsChange) {
-          // Get the current layout and determine new stream order based on positions
-          const currentLayout = get().layout;
-          const streamLayouts = currentLayout
-            .filter(item => item.i.startsWith('stream-'))
-            .sort((a, b) => {
-              // Sort by position (top-left to bottom-right)
-              if (a.y !== b.y) return a.y - b.y;
-              return a.x - b.x;
-            })
-            .map(item => item.i.replace('stream-', ''));
-
-          state.onStreamsChange(streamLayouts);
+          state.onStreamsChange(state.streams);
         }
       },
 
@@ -395,7 +395,7 @@ export const useStreamStore = create<StreamStore>()(
         const streamIndex = state.streams.indexOf(streamName);
         if (streamIndex === -1) return;
 
-        const newStreams = state.streams.filter(s => s !== streamName);
+        const newStreams = state.streams.filter((s: string) => s !== streamName);
 
         let newActiveChatStreamer = state.activeChatStreamer;
         if (state.activeChatStreamer === streamName && newStreams.length > 0) {

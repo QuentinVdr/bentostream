@@ -65,7 +65,7 @@ function Watch() {
 
   return (
     <div className="h-dvh w-dvw">
-      <GridToolsBar key={`toolbar-${storeStreams.join('-')}`} />
+      <GridToolsBar />
       <ReactGridLayout
         className="layout"
         layout={layout}

@@ -3,7 +3,7 @@ import { useStreamStore } from '../../stores/streamStore';
 import StreamsFormPopup from '../StreamFormPopup/StreamsFormPopup';
 
 const GridToolsBar = () => {
-  const { streams, updateStreams } = useStreamStore();
+  const { streams, setStreams } = useStreamStore();
 
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
@@ -21,7 +21,7 @@ const GridToolsBar = () => {
   };
 
   const handleUpdateStreams = (newStreams: string[]) => {
-    updateStreams(newStreams);
+    setStreams(newStreams, true);
   };
 
   return (
