@@ -4,7 +4,6 @@
     "source.fixAll.ts": "explicit",
     "source.organizeImports": "explicit",
     "source.removeUnusedImports": "explicit",
-    "source.sort.json": "explicit",
     "source.sortImports": "explicit"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
