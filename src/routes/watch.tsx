@@ -33,14 +33,7 @@ function Watch() {
   const navigate = useNavigate();
   const isDarkThemePreferred = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-  const {
-    streams: storeStreams,
-    setStreams,
-    updateLayout,
-    isActiveChat,
-    layout,
-    setOnStreamsChange,
-  } = useStreamStore();
+  const { isActiveChat, layout, setOnStreamsChange, setStreams, updateLayout } = useStreamStore();
 
   useEffect(() => {
     setOnStreamsChange((newStreams: string[]) => {
@@ -82,16 +75,27 @@ function Watch() {
         verticalCompact
         onLayoutChange={handleLayoutChange}
       >
-        {storeStreams.map((streamName: string) => (
-          <div key={`stream-${streamName}`}>
-            <StreamItem streamName={streamName} />
-          </div>
-        ))}
-        {storeStreams.map((streamName: string) => (
-          <div key={`chat-${streamName}`} className={isActiveChat(streamName) ? '' : 'hidden'}>
-            <ChatItem streamName={streamName} isDarkThemePreferred={isDarkThemePreferred} />
-          </div>
-        ))}
+        {layout.map(item => {
+          const [type, streamName] = item.i.split('-', 2);
+
+          if (type === 'stream') {
+            return (
+              <div key={item.i}>
+                <StreamItem streamName={streamName} />
+              </div>
+            );
+          }
+
+          if (type === 'chat') {
+            return (
+              <div key={item.i} className={isActiveChat(streamName) ? '' : 'hidden'}>
+                <ChatItem streamName={streamName} isDarkThemePreferred={isDarkThemePreferred} />
+              </div>
+            );
+          }
+
+          return null;
+        })}
       </ReactGridLayout>
     </div>
   );

@@ -1,7 +1,6 @@
 import type { Layout } from 'react-grid-layout';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { swapArrayElements } from '../utils/ArrayUtils';
 
 interface StreamStore {
   streams: string[];
@@ -350,14 +349,22 @@ export const useStreamStore = create<StreamStore>()(
       swapStreamsByName: (nameA: string, nameB: string) => {
         const state = get();
 
+        const newStreams = [...state.streams];
+        const indexA = newStreams.indexOf(nameA);
+        const indexB = newStreams.indexOf(nameB);
+
+        if (indexA !== -1 && indexB !== -1) {
+          [newStreams[indexA], newStreams[indexB]] = [newStreams[indexB], newStreams[indexA]];
+        }
+
         state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
 
-        swapArrayElements(state.streams, nameA, nameB);
         set({
-          streams: state.streams,
+          streams: newStreams,
         });
+
         if (state.onStreamsChange) {
-          state.onStreamsChange(state.streams);
+          state.onStreamsChange(newStreams);
         }
       },
 
