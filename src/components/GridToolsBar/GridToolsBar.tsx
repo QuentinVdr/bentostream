@@ -3,7 +3,7 @@ import { useStreamStore } from '../../stores/streamStore';
 import StreamsFormPopup from '../StreamFormPopup/StreamsFormPopup';
 
 const GridToolsBar = () => {
-  const { streams, setStreams } = useStreamStore();
+  const { streams, setStreams, resetLayoutForStreamCount, saveLayoutToStorage } = useStreamStore();
 
   const [isToolbarVisible, setIsToolbarVisible] = useState(true);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
@@ -22,6 +22,14 @@ const GridToolsBar = () => {
 
   const handleUpdateStreams = (newStreams: string[]) => {
     setStreams(newStreams, true);
+  };
+
+  const handleResetLayout = () => {
+    resetLayoutForStreamCount(streams.length);
+  };
+
+  const handleSaveLayout = () => {
+    saveLayoutToStorage();
   };
 
   return (
@@ -60,13 +68,29 @@ const GridToolsBar = () => {
               <span className="text-sm font-medium text-gray-300">Streams ({streams.length})</span>
 
               {/* Control buttons */}
-              <div className="flex gap-1">
+              <div className="flex gap-2">
                 <button
                   onClick={handleEditStreams}
                   className="rounded bg-violet-600 px-2 py-1 text-xs font-medium text-white transition-all duration-200 hover:scale-105 hover:bg-violet-700 active:scale-95"
                   title="Edit streams list"
                 >
                   Edit Streams
+                </button>
+
+                <button
+                  onClick={handleSaveLayout}
+                  className="rounded border border-green-600 px-2 py-1 text-xs font-medium text-green-600 transition-all duration-200 hover:scale-105 hover:bg-green-600 hover:text-white active:scale-95"
+                  title="Save current layout for this stream count"
+                >
+                  Save Layout
+                </button>
+
+                <button
+                  onClick={handleResetLayout}
+                  className="rounded border border-orange-600 px-2 py-1 text-xs font-medium text-orange-600 transition-all duration-200 hover:scale-105 hover:bg-orange-600 hover:text-white active:scale-95"
+                  title="Reset layout to default for this stream count"
+                >
+                  Reset Layout
                 </button>
               </div>
             </>

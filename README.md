@@ -11,7 +11,7 @@ A simple project to be an alternative to the multistre.am with a modular interfa
 - [ ] Add/remove streams chat
 - [ ] Hide/show streams
 - [x] Persist swap state in URL parameters
-- [ ] Custom layouts saving
+- [x] Custom layouts saving
 - [ ] Stream favorites/bookmarks
 - [ ] Picture-in-picture mode
 - [x] Add twitch support
