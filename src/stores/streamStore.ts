@@ -7,11 +7,19 @@ interface SavedLayoutItem {
   y: number;
   w: number;
   h: number;
-  type: 'stream' | 'chat-active' | 'chat-hidden';
-  position: number;
+  type: 'stream' | 'chat';
+  streamName?: string; // For identifying which stream/chat this belongs to
+  isActive?: boolean; // For chat items, indicates if it's the active chat
+}
+
+interface SavedLayout {
+  items: SavedLayoutItem[];
+  activeChat: string | null; // Explicitly save which chat is active
+  version: number; // For future migration if needed
 }
 
 const LAYOUT_STORAGE_KEY_PREFIX = 'bentostream-layout';
+const LAYOUT_VERSION = 2; // Bump this when changing the format
 
 const getLayoutStorageKey = (streamCount: number): string => {
   return `${LAYOUT_STORAGE_KEY_PREFIX}-${streamCount}`;
@@ -37,108 +45,116 @@ const clearAllStoredLayouts = (): void => {
   }
 };
 
-const saveLayoutToLocalStorage = (streamCount: number, layout: Layout[]): void => {
+const saveLayoutToLocalStorage = (streamCount: number, layout: Layout[], activeChat: string): void => {
   try {
     const storageKey = getLayoutStorageKey(streamCount);
 
-    const normalizedLayout: SavedLayoutItem[] = [];
-    const streamItems: Layout[] = [];
-    let activeChatItem: Layout | null = null;
-    const hiddenChatItems: Layout[] = [];
+    const savedLayout: SavedLayout = {
+      items: [],
+      activeChat: activeChat || null,
+      version: LAYOUT_VERSION,
+    };
 
+    // Process each layout item
     layout.forEach(item => {
-      const [type] = item.i.split('-', 2);
+      const [type, ...nameParts] = item.i.split('-');
+      const name = nameParts.join('-'); // Handle stream names with dashes
+
       if (type === 'stream') {
-        streamItems.push(item);
+        savedLayout.items.push({
+          x: item.x,
+          y: item.y,
+          w: item.w,
+          h: item.h,
+          type: 'stream',
+          streamName: name,
+        });
       } else if (type === 'chat') {
-        if (item.w > 0 && item.h > 0) {
-          activeChatItem = item;
-        } else {
-          hiddenChatItems.push(item);
-        }
+        // Save chat position regardless of whether it's visible or hidden
+        const isActive = name === activeChat && item.w > 0 && item.h > 0;
+        savedLayout.items.push({
+          x: item.x,
+          y: item.y,
+          w: item.w,
+          h: item.h,
+          type: 'chat',
+          streamName: name,
+          isActive,
+        });
       }
     });
 
-    streamItems.sort((a, b) => {
-      if (a.y !== b.y) return a.y - b.y;
-      return a.x - b.x;
-    });
-
-    streamItems.forEach((item, index) => {
-      normalizedLayout.push({
-        x: item.x,
-        y: item.y,
-        w: item.w,
-        h: item.h,
-        type: 'stream',
-        position: index,
-      });
-    });
-
-    if (activeChatItem !== null) {
-      const chatItem = activeChatItem as Layout;
-      normalizedLayout.push({
-        x: chatItem.x,
-        y: chatItem.y,
-        w: chatItem.w,
-        h: chatItem.h,
-        type: 'chat-active',
-        position: -1,
-      });
-    }
-
-    hiddenChatItems.forEach(() => {
-      normalizedLayout.push({
-        x: 0,
-        y: 0,
-        w: 0,
-        h: 0,
-        type: 'chat-hidden',
-        position: -2,
-      });
-    });
-
-    localStorage.setItem(storageKey, JSON.stringify(normalizedLayout));
+    localStorage.setItem(storageKey, JSON.stringify(savedLayout));
   } catch (error) {
     console.warn('Failed to save layout to localStorage:', error);
   }
 };
 
-const getLayoutFromLocalStorage = (streamCount: number): SavedLayoutItem[] | null => {
+const loadLayoutFromLocalStorage = (
+  streamCount: number,
+  streams: string[],
+  requestedActiveChat: string
+): { layout: Layout[] | null; activeChat: string } => {
   try {
     const storageKey = getLayoutStorageKey(streamCount);
     const saved = localStorage.getItem(storageKey);
-    return saved ? JSON.parse(saved) : null;
-  } catch (error) {
-    console.warn('Failed to load layout from localStorage:', error);
-    return null;
-  }
-};
 
-const loadLayoutFromLocalStorage = (streamCount: number, streams: string[], activeChat: string): Layout[] | null => {
-  try {
-    const savedLayout = getLayoutFromLocalStorage(streamCount);
+    if (!saved) {
+      return { layout: null, activeChat: requestedActiveChat };
+    }
 
-    if (!savedLayout) {
-      return null;
+    const savedLayout: SavedLayout = JSON.parse(saved);
+
+    // Handle old format (backward compatibility)
+    if (!savedLayout.version || savedLayout.version < LAYOUT_VERSION) {
+      // Clear old format and return null to regenerate
+      localStorage.removeItem(storageKey);
+      return { layout: null, activeChat: requestedActiveChat };
+    }
+
+    // Validate that all current streams have corresponding saved items
+    const savedStreamNames = savedLayout.items.filter(item => item.type === 'stream').map(item => item.streamName);
+
+    // Check if streams match (order doesn't matter for validation)
+    const streamsMatch =
+      streams.length === savedStreamNames.length && streams.every(stream => savedStreamNames.includes(stream));
+
+    if (!streamsMatch) {
+      console.warn('Saved layout streams mismatch, regenerating...');
+      return { layout: null, activeChat: requestedActiveChat };
     }
 
     const layout: Layout[] = [];
-    const validActiveChat = streams.includes(activeChat) ? activeChat : streams[0];
 
-    const streamLayouts = savedLayout
-      .filter((item: SavedLayoutItem) => item.type === 'stream')
-      .sort((a: SavedLayoutItem, b: SavedLayoutItem) => a.position - b.position);
-    const activeChatLayout = savedLayout.find((item: SavedLayoutItem) => item.type === 'chat-active');
+    // Determine active chat
+    let activeChat = savedLayout.activeChat || '';
 
-    if (streamLayouts.length !== streams.length) {
-      console.warn('Saved layout stream count mismatch, regenerating...');
-      return null;
+    // Validate that saved active chat is still in the streams list
+    if (activeChat && !streams.includes(activeChat)) {
+      activeChat = requestedActiveChat || streams[0] || '';
     }
 
-    streams.forEach((streamName, index) => {
-      if (index < streamLayouts.length) {
-        const savedItem = streamLayouts[index];
+    // If no active chat was saved but one is requested, use the requested one
+    if (!activeChat && requestedActiveChat && streams.includes(requestedActiveChat)) {
+      activeChat = requestedActiveChat;
+    }
+
+    // Create a map for quick lookup of saved positions
+    const streamPositions = new Map<string, SavedLayoutItem>();
+    const chatPositions = new Map<string, SavedLayoutItem>();
+
+    savedLayout.items.forEach(item => {
+      if (item.type === 'stream' && item.streamName) {
+        streamPositions.set(item.streamName, item);
+      } else if (item.type === 'chat' && item.streamName) {
+        chatPositions.set(item.streamName, item);
+      }
+    });
+
+    // Add stream layouts
+    streams.forEach(streamName => {
+      const savedItem = streamPositions.get(streamName);
+      if (savedItem) {
         layout.push({
           i: `stream-${streamName}`,
           x: savedItem.x,
@@ -149,32 +165,44 @@ const loadLayoutFromLocalStorage = (streamCount: number, streams: string[], acti
       }
     });
 
-    if (activeChatLayout) {
-      layout.push({
-        i: `chat-${validActiveChat}`,
-        x: activeChatLayout.x,
-        y: activeChatLayout.y,
-        w: activeChatLayout.w,
-        h: activeChatLayout.h,
-      });
-    }
+    // Add chat layouts
+    streams.forEach(streamName => {
+      const savedItem = chatPositions.get(streamName);
 
-    for (const stream of streams) {
-      if (stream !== validActiveChat) {
+      if (savedItem) {
+        // Use saved position
         layout.push({
-          i: `chat-${stream}`,
+          i: `chat-${streamName}`,
+          x: savedItem.x,
+          y: savedItem.y,
+          w: savedItem.w,
+          h: savedItem.h,
+        });
+      } else if (streamName === activeChat) {
+        // No saved position but this should be active - give it a default visible position
+        layout.push({
+          i: `chat-${streamName}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 8,
+        });
+      } else {
+        // Hidden chat
+        layout.push({
+          i: `chat-${streamName}`,
           x: 0,
           y: 0,
           w: 0,
           h: 0,
         });
       }
-    }
+    });
 
-    return layout;
+    return { layout, activeChat };
   } catch (error) {
     console.warn('Failed to load layout from localStorage:', error);
-    return null;
+    return { layout: null, activeChat: requestedActiveChat };
   }
 };
 
@@ -185,223 +213,404 @@ const generateLayout = (streams: string[], activeChat: string): Layout[] => {
     return [];
   }
 
-  const savedLayout = loadLayoutFromLocalStorage(streamCount, streams, activeChat);
+  // Try to load saved layout first
+  const { layout: savedLayout } = loadLayoutFromLocalStorage(streamCount, streams, activeChat);
+
   if (savedLayout) {
     return savedLayout;
   }
 
+  // Generate new layout
   const layout: Layout[] = [];
-  const validActiveChat = streams.includes(activeChat) ? activeChat : streams[0];
+  const validActiveChat = activeChat && streams.includes(activeChat) ? activeChat : '';
+  const hasChat = validActiveChat !== '';
 
+  // Generate default layouts based on stream count
   if (streamCount === 1) {
-    layout.push(
-      {
+    if (hasChat) {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 9,
+          h: 8,
+        },
+        {
+          i: `chat-${validActiveChat}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 8,
+        }
+      );
+    } else {
+      layout.push({
         i: `stream-${streams[0]}`,
         x: 0,
         y: 0,
-        w: 9,
+        w: 12,
         h: 8,
-      },
-      {
-        i: `chat-${validActiveChat}`,
-        x: 9,
-        y: 0,
-        w: 3,
-        h: 8,
-      }
-    );
+      });
+    }
   } else if (streamCount === 2) {
-    layout.push(
-      {
-        i: `stream-${streams[0]}`,
-        x: 0,
-        y: 0,
-        w: 9,
-        h: 12,
-      },
-      {
-        i: `stream-${streams[1]}`,
-        x: 9,
-        y: 0,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `chat-${validActiveChat}`,
-        x: 9,
-        y: 4,
-        w: 3,
-        h: 8,
-      }
-    );
+    if (hasChat) {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 9,
+          h: 12,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${validActiveChat}`,
+          x: 9,
+          y: 4,
+          w: 3,
+          h: 8,
+        }
+      );
+    } else {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 6,
+          h: 12,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 6,
+          y: 0,
+          w: 6,
+          h: 12,
+        }
+      );
+    }
   } else if (streamCount === 3) {
-    layout.push(
-      {
-        i: `stream-${streams[0]}`,
-        x: 0,
-        y: 0,
-        w: 8,
-        h: 8,
-      },
-      {
-        i: `stream-${streams[1]}`,
-        x: 0,
-        y: 8,
-        w: 4,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[2]}`,
-        x: 4,
-        y: 8,
-        w: 4,
-        h: 4,
-      },
-      {
-        i: `chat-${validActiveChat}`,
-        x: 8,
-        y: 0,
-        w: 4,
-        h: 12,
-      }
-    );
+    if (hasChat) {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 8,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 4,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 4,
+          y: 8,
+          w: 4,
+          h: 4,
+        },
+        {
+          i: `chat-${validActiveChat}`,
+          x: 8,
+          y: 0,
+          w: 4,
+          h: 12,
+        }
+      );
+    } else {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 12,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 6,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 6,
+          y: 8,
+          w: 6,
+          h: 4,
+        }
+      );
+    }
   } else if (streamCount === 4) {
-    layout.push(
-      {
-        i: `stream-${streams[0]}`,
-        x: 0,
-        y: 0,
-        w: 9,
-        h: 8,
-      },
-      {
-        i: `stream-${streams[1]}`,
-        x: 0,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[2]}`,
-        x: 3,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[3]}`,
-        x: 6,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `chat-${validActiveChat}`,
-        x: 9,
-        y: 0,
-        w: 3,
-        h: 12,
-      }
-    );
+    if (hasChat) {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 9,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${validActiveChat}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 12,
+        }
+      );
+    } else {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 6,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 6,
+          y: 0,
+          w: 6,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 0,
+          y: 6,
+          w: 6,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 6,
+          w: 6,
+          h: 6,
+        }
+      );
+    }
   } else if (streamCount === 5) {
-    layout.push(
-      {
-        i: `stream-${streams[0]}`,
-        x: 0,
-        y: 0,
-        w: 9,
-        h: 8,
-      },
-      {
-        i: `stream-${streams[1]}`,
-        x: 0,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[2]}`,
-        x: 3,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[3]}`,
-        x: 6,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[4]}`,
-        x: 9,
-        y: 0,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `chat-${validActiveChat}`,
-        x: 9,
-        y: 4,
-        w: 3,
-        h: 8,
-      }
-    );
+    if (hasChat) {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 9,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[4]}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${validActiveChat}`,
+          x: 9,
+          y: 4,
+          w: 3,
+          h: 8,
+        }
+      );
+    } else {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 12,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[4]}`,
+          x: 9,
+          y: 8,
+          w: 3,
+          h: 4,
+        }
+      );
+    }
   } else if (streamCount === 6) {
-    layout.push(
-      {
-        i: `stream-${streams[0]}`,
-        x: 0,
-        y: 0,
-        w: 6,
-        h: 8,
-      },
-      {
-        i: `stream-${streams[1]}`,
-        x: 0,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[2]}`,
-        x: 3,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[3]}`,
-        x: 6,
-        y: 8,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[4]}`,
-        x: 6,
-        y: 0,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `stream-${streams[5]}`,
-        x: 6,
-        y: 4,
-        w: 3,
-        h: 4,
-      },
-      {
-        i: `chat-${validActiveChat}`,
-        x: 9,
-        y: 0,
-        w: 3,
-        h: 12,
-      }
-    );
+    if (hasChat) {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 6,
+          h: 8,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 0,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 3,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 6,
+          y: 8,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[4]}`,
+          x: 6,
+          y: 0,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `stream-${streams[5]}`,
+          x: 6,
+          y: 4,
+          w: 3,
+          h: 4,
+        },
+        {
+          i: `chat-${validActiveChat}`,
+          x: 9,
+          y: 0,
+          w: 3,
+          h: 12,
+        }
+      );
+    } else {
+      layout.push(
+        {
+          i: `stream-${streams[0]}`,
+          x: 0,
+          y: 0,
+          w: 6,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[1]}`,
+          x: 6,
+          y: 0,
+          w: 6,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[2]}`,
+          x: 0,
+          y: 6,
+          w: 4,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[3]}`,
+          x: 4,
+          y: 6,
+          w: 4,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[4]}`,
+          x: 8,
+          y: 6,
+          w: 4,
+          h: 6,
+        },
+        {
+          i: `stream-${streams[5]}`,
+          x: 0,
+          y: 12,
+          w: 12,
+          h: 6,
+        }
+      );
+    }
   }
 
+  // Add hidden chat panels for streams that don't have active chat
   for (const stream of streams) {
     if (stream !== validActiveChat) {
       layout.push({
@@ -438,7 +647,8 @@ interface StreamStore {
   removeChat: (streamer: string) => void;
   changeChat: (streamer: string) => void;
   isActiveChat: (stream: string) => boolean;
-  noActiveChat: (stream: string) => boolean;
+  noActiveChat: () => boolean;
+  hasActiveChat: () => boolean;
 
   // layout
   updateLayout: (layout: Layout[]) => void;
@@ -467,14 +677,23 @@ export const useStreamStore = create<StreamStore>()(
         }
 
         let newActiveChat = state.activeChat;
-        if (!state.activeChat || !streams.includes(state.activeChat)) {
-          newActiveChat = streams.length > 0 ? streams[0] : '';
+        if (state.activeChat && !streams.includes(state.activeChat)) {
+          // Previous active chat is no longer in streams, clear it
+          newActiveChat = '';
         }
 
         let layout;
         if (state.streams.length !== streams.length) {
+          // Stream count changed, generate new layout
           layout = generateLayout(streams, newActiveChat);
+
+          // Update activeChat based on what was loaded
+          const loadResult = loadLayoutFromLocalStorage(streams.length, streams, newActiveChat);
+          if (loadResult.layout) {
+            newActiveChat = loadResult.activeChat;
+          }
         } else {
+          // Same number of streams, preserve layout structure
           const streamItems: Layout[] = [];
           let activeChatItem: Layout | null = null;
 
@@ -494,6 +713,7 @@ export const useStreamStore = create<StreamStore>()(
 
           const newLayout: Layout[] = [];
 
+          // Add stream items
           streams.forEach((streamName, index) => {
             if (index < streamItems.length) {
               const originalItem = streamItems[index];
@@ -504,7 +724,8 @@ export const useStreamStore = create<StreamStore>()(
             }
           });
 
-          if (activeChatItem !== null) {
+          // Add chat items
+          if (activeChatItem && newActiveChat) {
             const chatItem = activeChatItem as Layout;
             newLayout.push({
               i: `chat-${newActiveChat}`,
@@ -515,6 +736,7 @@ export const useStreamStore = create<StreamStore>()(
             });
           }
 
+          // Add hidden chats for other streams
           for (const stream of streams) {
             if (stream !== newActiveChat) {
               newLayout.push({
@@ -594,7 +816,11 @@ export const useStreamStore = create<StreamStore>()(
 
           const newLayout = state.layout.map((item: Layout) => {
             if (item.i === layoutName) {
-              return { ...item, x: 9, y: 12, w: 3, h: 6 };
+              // Make this chat visible with default position
+              return { ...item, x: 9, y: 0, w: 3, h: 8 };
+            } else if (item.i.startsWith('chat-') && item.w > 0 && item.h > 0) {
+              // Hide any other active chat
+              return { ...item, x: 0, y: 0, w: 0, h: 0 };
             }
             return item;
           });
@@ -634,11 +860,15 @@ export const useStreamStore = create<StreamStore>()(
       },
 
       isActiveChat: (stream: string) => {
-        return get().activeChat.includes(stream);
+        return get().activeChat === stream;
       },
 
-      noActiveChat: (stream: string) => {
-        return !get().activeChat.includes(stream);
+      noActiveChat: () => {
+        return get().activeChat === '';
+      },
+
+      hasActiveChat: () => {
+        return get().activeChat !== '';
       },
 
       updateLayout: (newLayout: Layout[]) => {
@@ -648,14 +878,14 @@ export const useStreamStore = create<StreamStore>()(
         });
 
         if (state.streams.length > 0) {
-          saveLayoutToLocalStorage(state.streams.length, newLayout);
+          saveLayoutToLocalStorage(state.streams.length, newLayout, state.activeChat);
         }
       },
 
       saveLayoutToStorage: () => {
         const state = get();
         if (state.streams.length > 0 && state.layout.length > 0) {
-          saveLayoutToLocalStorage(state.streams.length, state.layout);
+          saveLayoutToLocalStorage(state.streams.length, state.layout, state.activeChat);
         }
       },
 
