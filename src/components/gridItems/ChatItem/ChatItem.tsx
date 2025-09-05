@@ -9,7 +9,7 @@ interface ChatItemProps {
 }
 
 const ChatItem = ({ streamName, isDarkThemePreferred = false }: ChatItemProps) => {
-  const { changeChatStreamer, streams } = useStreamStore();
+  const { changeChat, streams, removeChat } = useStreamStore();
 
   const title = `Chat: ${streamName}`;
 
@@ -19,22 +19,22 @@ const ChatItem = ({ streamName, isDarkThemePreferred = false }: ChatItemProps) =
   }, [streamName, isDarkThemePreferred]);
 
   const handleChatChange = useCallback(
-    (newChatStreamer: string) => {
-      changeChatStreamer(newChatStreamer);
+    (newChat: string) => {
+      changeChat(newChat);
     },
-    [changeChatStreamer]
+    [changeChat]
   );
 
-  const availableChatStreamers = useMemo(() => streams.filter(s => s !== streamName), [streams, streamName]);
+  const availableChats = useMemo(() => streams.filter(s => s !== streamName), [streams, streamName]);
 
   const chatDropdownItems = useMemo(
     () =>
-      availableChatStreamers.map(streamer => ({
+      availableChats.map(streamer => ({
         id: streamer,
         label: streamer,
         onClick: () => handleChatChange(streamer),
       })),
-    [availableChatStreamers, handleChatChange]
+    [availableChats, handleChatChange]
   );
 
   return (
@@ -43,7 +43,28 @@ const ChatItem = ({ streamName, isDarkThemePreferred = false }: ChatItemProps) =
       iframeSrc={iframeSrc}
       streamName={streamName}
       headerActions={
-        <Dropdown key={`chat-${streamName}-${streams.join('-')}`} buttonLabel="Switch Chat" items={chatDropdownItems} />
+        <>
+          <Dropdown
+            key={`chat-${streamName}-${streams.join('-')}`}
+            buttonLabel="Switch Chat"
+            items={chatDropdownItems}
+          />
+          <button
+            onMouseDown={e => e.stopPropagation()}
+            onClick={() => removeChat(streamName)}
+            className="ml-auto hover:text-red-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </>
       }
     />
   );

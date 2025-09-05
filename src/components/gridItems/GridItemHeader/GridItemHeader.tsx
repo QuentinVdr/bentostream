@@ -24,7 +24,7 @@ const GridItemHeader = memo(({ title, children, streamName }: StreamGridHeaderPr
         ) : (
           <h2 className="text-base font-semibold text-white">{title}</h2>
         )}
-        <div className="mt-1 flex justify-center gap-2">{children}</div>
+        <div className="flex grow items-center gap-2">{children}</div>
       </div>
     </div>
   );

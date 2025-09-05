@@ -14,10 +14,10 @@ interface DropdownProps {
 
 const Dropdown = memo(({ buttonLabel, items, className = '' }: DropdownProps) => {
   return (
-    <div className={`group/dropdown relative ${className}`}>
+    <div className="group/dropdown relative">
       <button
         onMouseDown={e => e.stopPropagation()}
-        className="rounded bg-violet-600 px-2 py-1 text-xs text-white hover:bg-violet-700 focus:ring-2 focus:ring-violet-500 focus:outline-none"
+        className={`rounded bg-violet-600 px-2 py-1 text-xs font-medium text-white transition-all duration-200 hover:scale-105 hover:bg-violet-700 active:scale-95 ${className}`}
         type="button"
       >
         {buttonLabel} ▼
