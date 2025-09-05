@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect } from 'react';
-import StreamsForm from '../StreamsForm/StreamsForm';
+import StreamsForm from '../StreamsForm';
 
 interface StreamsFormPopupProps {
   isOpen: boolean;

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStreamStore } from '../../stores/streamStore';
-import StreamsFormPopup from '../StreamFormPopup/StreamsFormPopup';
+import StreamsFormPopup from '../StreamsForm/StreamFormPopup/StreamsFormPopup';
 
 const GridToolsBar = () => {
   const { streams, setStreams, resetLayoutForStreamCount, saveLayoutToStorage } = useStreamStore();
