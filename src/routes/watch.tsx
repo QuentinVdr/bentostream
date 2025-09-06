@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo } from 'react';
-import RGL, { WidthProvider, type Layout } from 'react-grid-layout';
+import ReactGridLayout, { type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import ChatItem from '../components/gridItems/ChatItem/ChatItem';
@@ -25,8 +25,6 @@ export const Route = createFileRoute('/watch')({
   },
   component: Watch,
 });
-
-const ReactGridLayout = WidthProvider(RGL);
 
 function Watch() {
   const { streams } = Route.useSearch();
@@ -53,18 +51,18 @@ function Watch() {
     updateLayout(newLayout);
   };
 
-  const dimensions = useWindowDimensions(100);
-  const rowHeight = useMemo(() => Math.floor(dimensions.height / 12), [dimensions.height]);
+  const dimensions = useWindowDimensions();
+  const rowHeight = useMemo(() => Math.max(24, Math.floor(dimensions.height / 12)), [dimensions.height]);
 
   return (
-    <div className="h-dvh w-dvw">
+    <div className="min-h-dvh w-full">
       <GridToolsBar />
       <ReactGridLayout
         className="layout"
         layout={layout}
         cols={12}
         rowHeight={rowHeight}
-        width={dimensions.width}
+        width={dimensions.hasVerticalScrollbar ? dimensions.width - 1 : dimensions.width}
         isDraggable
         isResizable
         resizeHandles={['se', 'sw', 'ne', 'nw']}
