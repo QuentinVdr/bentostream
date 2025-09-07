@@ -1,13 +1,14 @@
-import { forwardRef, memo, useImperativeHandle, useRef, type ReactNode } from 'react';
-import GridItemHeader from '../GridItemHeader/GridItemHeader';
+import { forwardRef, memo, useImperativeHandle, type ReactNode } from 'react';
+import { useIframeRefresh } from '../../../hooks/useIframeRefresh';
+import GridItemHeader from './GridItemHeader/GridItemHeader';
 
 interface GridItemProps {
   title: string;
   iframeSrc: string;
   allowFullScreen?: boolean;
-  headerActions?: ReactNode;
   streamName?: string;
   onRefresh?: () => void;
+  children?: ReactNode;
 }
 
 export interface GridItemRef {
@@ -16,25 +17,10 @@ export interface GridItemRef {
 
 const GridItem = memo(
   forwardRef<GridItemRef, GridItemProps>(
-    ({ title, iframeSrc, allowFullScreen, headerActions, streamName, onRefresh }, ref) => {
-      const iframeRef = useRef<HTMLIFrameElement>(null);
+    ({ title, iframeSrc, allowFullScreen, streamName, onRefresh, children }, ref) => {
+      const { iframeRef, refreshIframe } = useIframeRefresh(onRefresh);
 
-      const refreshIframe = () => {
-        if (iframeRef.current) {
-          const currentSrc = iframeRef.current.src;
-          iframeRef.current.src = '';
-          setTimeout(() => {
-            if (iframeRef.current) {
-              iframeRef.current.src = currentSrc;
-            }
-          }, 100);
-        }
-        onRefresh?.();
-      };
-
-      useImperativeHandle(ref, () => ({
-        refreshIframe,
-      }));
+      useImperativeHandle(ref, () => ({ refreshIframe }), [refreshIframe]);
 
       return (
         <section
@@ -42,7 +28,7 @@ const GridItem = memo(
           aria-label={title}
         >
           <GridItemHeader title={title} streamName={streamName}>
-            {headerActions}
+            {children}
           </GridItemHeader>
           <iframe
             ref={iframeRef}

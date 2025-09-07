@@ -1,12 +1,15 @@
 import { memo, type ReactNode } from 'react';
 
-interface StreamGridHeaderProps {
+interface GridItemHeaderProps {
   title: string;
   children?: ReactNode;
   streamName?: string;
 }
 
-const GridItemHeader = memo(({ title, children, streamName }: StreamGridHeaderProps) => {
+const propsEqual = (a: Readonly<{ title: string; streamName?: string } & { children?: ReactNode }>, b: typeof a) =>
+  a.title === b.title && a.streamName === b.streamName;
+
+const GridItemHeader = memo(({ title, children, streamName }: GridItemHeaderProps) => {
   return (
     <div className="absolute z-10 w-full origin-top scale-y-0 transform-gpu transition-transform duration-300 ease-in-out group-hover:scale-y-100">
       <div className="flex flex-row items-center gap-6 bg-zinc-900 px-4 py-2 text-center backdrop-blur-sm">
@@ -17,7 +20,9 @@ const GridItemHeader = memo(({ title, children, streamName }: StreamGridHeaderPr
             rel="noopener noreferrer"
             className="cursor-pointer text-left text-base font-semibold text-white no-underline transition-colors duration-200 hover:text-purple-400"
             title={`Visit ${streamName} on Twitch`}
-            onMouseDown={e => e.stopPropagation()}
+            aria-label={`Visit ${streamName} on Twitch`}
+            onPointerDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             {title}
           </a>
@@ -28,7 +33,7 @@ const GridItemHeader = memo(({ title, children, streamName }: StreamGridHeaderPr
       </div>
     </div>
   );
-});
+}, propsEqual);
 
 GridItemHeader.displayName = 'GridItemHeader';
 
