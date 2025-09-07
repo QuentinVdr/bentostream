@@ -206,11 +206,11 @@ const loadLayoutFromLocalStorage = (
   }
 };
 
-const generateDefaultLayout = (streams: string[], activeChat?: string): Layout[] => {
+const generateDefaultLayout = (streams: string[], activeChat?: string): { layout: Layout[]; activeChat: string } => {
   const streamCount = streams.length;
 
   if (streamCount === 0) {
-    return [];
+    return { layout: [], activeChat: '' };
   }
 
   const layout: Layout[] = [];
@@ -439,7 +439,7 @@ const generateDefaultLayout = (streams: string[], activeChat?: string): Layout[]
     }
   }
 
-  return layout;
+  return { layout, activeChat };
 };
 
 const generateOrLoadLayout = (streams: string[], activeChat: string): { layout: Layout[]; activeChat: string } => {
@@ -462,10 +462,7 @@ const generateOrLoadLayout = (streams: string[], activeChat: string): { layout: 
   }
 
   // No saved layout, generate default
-  const defaultLayout = generateDefaultLayout(streams);
-  const validActiveChat = activeChat && streams.includes(activeChat) ? activeChat : '';
-
-  return { layout: defaultLayout, activeChat: validActiveChat };
+  return generateDefaultLayout(streams, activeChat);
 };
 
 interface StreamStore {
@@ -747,8 +744,7 @@ export const useStreamStore = create<StreamStore>()(
 
           if (state.streams.length === streamCount) {
             // Generate new default layout instead of trying to load
-            const defaultLayout = generateDefaultLayout(state.streams, state.activeChat);
-            set({ layout: defaultLayout });
+            set(generateDefaultLayout(state.streams, state.activeChat));
           }
         } catch (error) {
           console.warn('Failed to reset layout:', error);
