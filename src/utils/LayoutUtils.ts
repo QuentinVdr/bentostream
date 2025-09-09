@@ -6,18 +6,16 @@ interface SavedLayoutItem {
   w: number;
   h: number;
   type: 'stream' | 'chat';
-  streamName?: string; // For identifying which stream/chat this belongs to
-  isActive?: boolean; // For chat items, indicates if it's the active chat
+  index: number;
 }
 
 interface SavedLayout {
   items: SavedLayoutItem[];
-  activeChat: string | null; // Explicitly save which chat is active
-  version: number; // For future migration if needed
+  version: number;
 }
 
 const LAYOUT_STORAGE_KEY_PREFIX = 'bentostream-layout';
-const LAYOUT_VERSION = 2; // Bump this when changing the format
+const LAYOUT_VERSION = 3;
 
 export const getLayoutStorageKey = (streamCount: number): string => {
   return `${LAYOUT_STORAGE_KEY_PREFIX}-${streamCount}`;
@@ -43,20 +41,18 @@ export const clearAllStoredLayouts = (): void => {
   }
 };
 
-export const saveLayoutToLocalStorage = (streamCount: number, layout: Layout[], activeChat: string): void => {
+export const saveLayoutToLocalStorage = (layout: Layout[], streams: string[]): void => {
   try {
-    const storageKey = getLayoutStorageKey(streamCount);
+    const storageKey = getLayoutStorageKey(streams.length);
 
     const savedLayout: SavedLayout = {
       items: [],
-      activeChat: activeChat || null,
       version: LAYOUT_VERSION,
     };
 
-    // Process each layout item
     layout.forEach(item => {
       const [type, ...nameParts] = item.i.split('-');
-      const name = nameParts.join('-'); // Handle stream names with dashes
+      const name = nameParts.join('-');
 
       if (type === 'stream') {
         savedLayout.items.push({
@@ -65,19 +61,16 @@ export const saveLayoutToLocalStorage = (streamCount: number, layout: Layout[], 
           w: item.w,
           h: item.h,
           type: 'stream',
-          streamName: name,
+          index: streams.indexOf(name),
         });
-      } else if (type === 'chat') {
-        // Save chat position regardless of whether it's visible or hidden
-        const isActive = name === activeChat && item.w > 0 && item.h > 0;
+      } else if (type === 'chat' && item.w > 0 && item.h > 0) {
         savedLayout.items.push({
           x: item.x,
           y: item.y,
           w: item.w,
           h: item.h,
           type: 'chat',
-          streamName: name,
-          isActive,
+          index: 0,
         });
       }
     });
@@ -98,109 +91,33 @@ export const loadLayoutFromLocalStorage = (
     const saved = localStorage.getItem(storageKey);
 
     if (!saved) {
-      return { layout: null, activeChat: requestedActiveChat };
+      return { layout: null, activeChat: '' };
     }
 
     const savedLayout: SavedLayout = JSON.parse(saved);
 
-    // Handle old format (backward compatibility)
-    if (!savedLayout.version || savedLayout.version < LAYOUT_VERSION) {
-      // Clear old format and return null to regenerate
+    if (savedLayout.version < LAYOUT_VERSION) {
       localStorage.removeItem(storageKey);
-      return { layout: null, activeChat: requestedActiveChat };
+      return { layout: null, activeChat: '' };
     }
 
-    // Validate that all current streams have corresponding saved items
-    const savedStreamNames = savedLayout.items.filter(item => item.type === 'stream').map(item => item.streamName);
+    const activeChat = requestedActiveChat || streams[0];
 
-    // Check if streams match (order doesn't matter for validation)
-    const streamsMatch =
-      streams.length === savedStreamNames.length && streams.every(stream => savedStreamNames.includes(stream));
-
-    if (!streamsMatch) {
-      console.warn('Saved layout streams mismatch, regenerating...');
-      return { layout: null, activeChat: requestedActiveChat };
-    }
-
-    const layout: Layout[] = [];
-
-    // Determine active chat
-    let activeChat = savedLayout.activeChat || '';
-
-    // Validate that saved active chat is still in the streams list
-    if (activeChat && !streams.includes(activeChat)) {
-      activeChat = requestedActiveChat || streams[0] || '';
-    }
-
-    // If no active chat was saved but one is requested, use the requested one
-    if (!activeChat && requestedActiveChat && streams.includes(requestedActiveChat)) {
-      activeChat = requestedActiveChat;
-    }
-
-    // Create a map for quick lookup of saved positions
-    const streamPositions = new Map<string, SavedLayoutItem>();
-    const chatPositions = new Map<string, SavedLayoutItem>();
-
-    savedLayout.items.forEach(item => {
-      if (item.type === 'stream' && item.streamName) {
-        streamPositions.set(item.streamName, item);
-      } else if (item.type === 'chat' && item.streamName) {
-        chatPositions.set(item.streamName, item);
-      }
-    });
-
-    // Add stream layouts
-    streams.forEach(streamName => {
-      const savedItem = streamPositions.get(streamName);
-      if (savedItem) {
-        layout.push({
-          i: `stream-${streamName}`,
-          x: savedItem.x,
-          y: savedItem.y,
-          w: savedItem.w,
-          h: savedItem.h,
-        });
-      }
-    });
-
-    // Add chat layouts
-    streams.forEach(streamName => {
-      const savedItem = chatPositions.get(streamName);
-
-      if (savedItem) {
-        // Use saved position
-        layout.push({
-          i: `chat-${streamName}`,
-          x: savedItem.x,
-          y: savedItem.y,
-          w: savedItem.w,
-          h: savedItem.h,
-        });
-      } else if (streamName === activeChat) {
-        // No saved position but this should be active - give it a default visible position
-        layout.push({
-          i: `chat-${streamName}`,
-          x: 9,
-          y: 0,
-          w: 3,
-          h: 8,
-        });
-      } else {
-        // Hidden chat
-        layout.push({
-          i: `chat-${streamName}`,
-          x: 0,
-          y: 0,
-          w: 0,
-          h: 0,
-        });
-      }
-    });
+    const layout: Layout[] = savedLayout.items
+      .map(item => {
+        if (item.type === 'stream') {
+          return { i: `stream-${streams[item.index]}`, x: item.x, y: item.y, w: item.w, h: item.h } as Layout;
+        } else if (item.type === 'chat') {
+          return { i: `chat-${activeChat}`, x: item.x, y: item.y, w: item.w, h: item.h } as Layout;
+        }
+        return undefined;
+      })
+      .filter((item): item is Layout => item !== undefined);
 
     return { layout, activeChat };
   } catch (error) {
     console.warn('Failed to load layout from localStorage:', error);
-    return { layout: null, activeChat: requestedActiveChat };
+    return { layout: null, activeChat: '' };
   }
 };
 
@@ -217,7 +134,6 @@ export const generateDefaultLayout = (
   const layout: Layout[] = [];
   activeChat = activeChat || streams[0];
 
-  // Generate default layouts based on stream count
   if (streamCount === 1) {
     layout.push(
       {
@@ -453,7 +369,6 @@ export const generateOrLoadLayout = (
     return { layout: [], activeChat: '' };
   }
 
-  // First, try to load from localStorage
   const { layout: savedLayout, activeChat: loadedActiveChat } = loadLayoutFromLocalStorage(
     streamCount,
     streams,
@@ -461,10 +376,8 @@ export const generateOrLoadLayout = (
   );
 
   if (savedLayout) {
-    // Successfully loaded from storage
     return { layout: savedLayout, activeChat: loadedActiveChat };
   }
 
-  // No saved layout, generate default
   return generateDefaultLayout(streams, activeChat);
 };

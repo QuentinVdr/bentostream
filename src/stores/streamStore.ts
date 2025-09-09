@@ -212,8 +212,7 @@ export const useStreamStore = create<StreamStore>()(
             layout: newLayout,
           });
 
-          // Save the new layout state
-          saveLayoutToLocalStorage(state.streams.length, newLayout, streamer);
+          saveLayoutToLocalStorage(newLayout, state.streams);
         }
       },
 
@@ -233,8 +232,7 @@ export const useStreamStore = create<StreamStore>()(
           layout: newLayout,
         });
 
-        // Save the new layout state
-        saveLayoutToLocalStorage(state.streams.length, newLayout, '');
+        saveLayoutToLocalStorage(newLayout, state.streams);
       },
 
       changeChat: (streamer: string) => {
@@ -245,8 +243,7 @@ export const useStreamStore = create<StreamStore>()(
             activeChat: streamer,
           });
 
-          // Save the new layout state
-          saveLayoutToLocalStorage(state.streams.length, state.layout, streamer);
+          saveLayoutToLocalStorage(state.layout, state.streams);
         }
       },
 
@@ -269,14 +266,14 @@ export const useStreamStore = create<StreamStore>()(
         });
 
         if (state.streams.length > 0) {
-          saveLayoutToLocalStorage(state.streams.length, newLayout, state.activeChat);
+          saveLayoutToLocalStorage(newLayout, state.streams);
         }
       },
 
       saveLayoutToStorage: () => {
         const state = get();
         if (state.streams.length > 0 && state.layout.length > 0) {
-          saveLayoutToLocalStorage(state.streams.length, state.layout, state.activeChat);
+          saveLayoutToLocalStorage(state.layout, state.streams);
         }
       },
 
