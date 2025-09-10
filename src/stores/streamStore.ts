@@ -1,6 +1,7 @@
 import type { Layout } from 'react-grid-layout';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { swapArrayElements } from '../utils/ArrayUtils';
 import {
   clearAllStoredLayouts,
   generateDefaultLayout,
@@ -22,7 +23,7 @@ interface StreamStore {
   setStreams: (streams: string[], shouldTriggerCallback?: boolean) => void;
 
   // swap
-  swapItemByName: (nameA: string, nameB: string) => void;
+  swapItemByName: (nameA: string, nameB: string) => { layout: Layout[]; streams?: string[] } | undefined;
   swapStreamsByName: (nameA: string, nameB: string) => void;
 
   // chat
@@ -145,7 +146,7 @@ export const useStreamStore = create<StreamStore>()(
         }
       },
 
-      swapItemByName: (nameA: string, nameB: string) => {
+      swapItemByName: (nameA: string, nameB: string): { layout: Layout[]; streams?: string[] } | undefined => {
         const state = get();
 
         const layoutA = state.layout.find((l: { i: string }) => l.i === nameA);
@@ -164,31 +165,25 @@ export const useStreamStore = create<StreamStore>()(
           return item;
         });
 
-        set({
-          layout: newLayout,
-        });
+        let returnValue: { layout: Layout[]; streams?: string[] } = { layout: newLayout };
+
+        if (nameA.startsWith('stream-') || nameB.startsWith('stream-')) {
+          const streams = [...state.streams];
+          swapArrayElements(streams, nameA.replace('stream-', ''), nameB.replace('stream-', ''));
+          returnValue = { ...returnValue, streams: streams };
+          if (state.onStreamsChange) {
+            state.onStreamsChange(streams);
+          }
+        }
+
+        set(returnValue);
+        return returnValue;
       },
 
       swapStreamsByName: (nameA: string, nameB: string) => {
         const state = get();
 
-        const newStreams = [...state.streams];
-        const indexA = newStreams.indexOf(nameA);
-        const indexB = newStreams.indexOf(nameB);
-
-        if (indexA !== -1 && indexB !== -1) {
-          [newStreams[indexA], newStreams[indexB]] = [newStreams[indexB], newStreams[indexA]];
-        }
-
         state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
-
-        set({
-          streams: newStreams,
-        });
-
-        if (state.onStreamsChange) {
-          state.onStreamsChange(newStreams);
-        }
       },
 
       addChat: (streamer: string) => {
@@ -238,12 +233,12 @@ export const useStreamStore = create<StreamStore>()(
       changeChat: (streamer: string) => {
         const state = get();
         if (state.streams.includes(streamer) && streamer !== state.activeChat) {
-          state.swapItemByName(`chat-${state.activeChat}`, `chat-${streamer}`);
+          const { layout } = state.swapItemByName(`chat-${state.activeChat}`, `chat-${streamer}`)!;
           set({
             activeChat: streamer,
           });
 
-          saveLayoutToLocalStorage(state.layout, state.streams);
+          saveLayoutToLocalStorage(layout, state.streams);
         }
       },
 
