@@ -114,6 +114,12 @@ export const loadLayoutFromLocalStorage = (
       })
       .filter((item): item is Layout => item !== undefined);
 
+    layout.push(
+      ...streams
+        .filter(stream => stream !== activeChat)
+        .map(stream => ({ i: `chat-${stream}`, x: 0, y: 0, w: 0, h: 0 }) as Layout)
+    );
+
     return { layout, activeChat };
   } catch (error) {
     console.warn('Failed to load layout from localStorage:', error);
