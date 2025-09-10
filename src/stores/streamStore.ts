@@ -23,7 +23,7 @@ interface StreamStore {
   setStreams: (streams: string[], shouldTriggerCallback?: boolean) => void;
 
   // swap
-  swapItemByName: (nameA: string, nameB: string) => { layout: Layout[]; streams?: string[] } | undefined;
+  swapItemByName: (nameA: string, nameB: string) => Layout[] | undefined;
   swapStreamsByName: (nameA: string, nameB: string) => void;
 
   // chat
@@ -146,7 +146,7 @@ export const useStreamStore = create<StreamStore>()(
         }
       },
 
-      swapItemByName: (nameA: string, nameB: string): { layout: Layout[]; streams?: string[] } | undefined => {
+      swapItemByName: (nameA: string, nameB: string): Layout[] | undefined => {
         const state = get();
 
         const layoutA = state.layout.find((l: { i: string }) => l.i === nameA);
@@ -165,25 +165,27 @@ export const useStreamStore = create<StreamStore>()(
           return item;
         });
 
-        let returnValue: { layout: Layout[]; streams?: string[] } = { layout: newLayout };
-
-        if (nameA.startsWith('stream-') || nameB.startsWith('stream-')) {
-          const streams = [...state.streams];
-          swapArrayElements(streams, nameA.replace('stream-', ''), nameB.replace('stream-', ''));
-          returnValue = { ...returnValue, streams: streams };
-          if (state.onStreamsChange) {
-            state.onStreamsChange(streams);
-          }
-        }
-
-        set(returnValue);
-        return returnValue;
+        return newLayout;
       },
 
       swapStreamsByName: (nameA: string, nameB: string) => {
         const state = get();
 
-        state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`);
+        if (nameA === nameB) {
+          return;
+        }
+
+        if (!state.streams.includes(nameA) || !state.streams.includes(nameB)) {
+          return;
+        }
+
+        swapArrayElements(state.streams, nameA.replace('stream-', ''), nameB.replace('stream-', ''));
+        const newLayout = state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`)!;
+
+        set({
+          streams: state.streams,
+          layout: newLayout,
+        });
       },
 
       addChat: (streamer: string) => {
@@ -232,14 +234,17 @@ export const useStreamStore = create<StreamStore>()(
 
       changeChat: (streamer: string) => {
         const state = get();
-        if (state.streams.includes(streamer) && streamer !== state.activeChat) {
-          const { layout } = state.swapItemByName(`chat-${state.activeChat}`, `chat-${streamer}`)!;
-          set({
-            activeChat: streamer,
-          });
-
-          saveLayoutToLocalStorage(layout, state.streams);
+        if (!state.streams.includes(streamer) || streamer === state.activeChat) {
+          return;
         }
+        const newLayout = state.swapItemByName(`chat-${state.activeChat}`, `chat-${streamer}`)!;
+
+        set({
+          activeChat: streamer,
+          layout: newLayout,
+        });
+
+        saveLayoutToLocalStorage(newLayout, state.streams);
       },
 
       isActiveChat: (stream: string) => {
