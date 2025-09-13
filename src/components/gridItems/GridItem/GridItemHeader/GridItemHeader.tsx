@@ -11,7 +11,7 @@ const propsEqual = (a: Readonly<{ title: string; streamName?: string } & { child
 
 const GridItemHeader = memo(({ title, children, streamName }: GridItemHeaderProps) => {
   return (
-    <div className="absolute z-10 w-full origin-top scale-y-0 transform-gpu transition-transform duration-300 ease-in-out group-hover:scale-y-100">
+    <div className="absolute z-10 w-full origin-top scale-y-0 transform-gpu cursor-grab transition-transform duration-300 ease-in-out group-hover:scale-y-100 active:cursor-grabbing">
       <div className="flex flex-row items-center gap-6 bg-zinc-900 px-4 py-2 text-center backdrop-blur-sm">
         {streamName ? (
           <a
@@ -22,6 +22,7 @@ const GridItemHeader = memo(({ title, children, streamName }: GridItemHeaderProp
             title={`Visit ${streamName} on Twitch`}
             aria-label={`Visit ${streamName} on Twitch`}
             onPointerDown={e => e.stopPropagation()}
+            onMouseDown={e => e.stopPropagation()}
             onClick={e => e.stopPropagation()}
           >
             {title}
