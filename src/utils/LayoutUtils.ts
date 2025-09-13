@@ -102,17 +102,23 @@ export const loadLayoutFromLocalStorage = (
     }
 
     const activeChat = requestedActiveChat || streams[0];
+    let isActiveChatSet = false;
 
     const layout: Layout[] = savedLayout.items
       .map(item => {
         if (item.type === 'stream') {
           return { i: `stream-${streams[item.index]}`, x: item.x, y: item.y, w: item.w, h: item.h } as Layout;
         } else if (item.type === 'chat') {
+          isActiveChatSet = true;
           return { i: `chat-${activeChat}`, x: item.x, y: item.y, w: item.w, h: item.h } as Layout;
         }
         return undefined;
       })
       .filter((item): item is Layout => item !== undefined);
+
+    if (!isActiveChatSet && !!requestedActiveChat) {
+      layout.push({ i: `chat-${requestedActiveChat}`, x: 9, y: 0, w: 3, h: 8 });
+    }
 
     layout.push(
       ...streams
@@ -120,7 +126,7 @@ export const loadLayoutFromLocalStorage = (
         .map(stream => ({ i: `chat-${stream}`, x: 0, y: 0, w: 0, h: 0 }) as Layout)
     );
 
-    return { layout, activeChat };
+    return { layout, activeChat: isActiveChatSet ? activeChat : '' };
   } catch (error) {
     console.warn('Failed to load layout from localStorage:', error);
     return { layout: null, activeChat: '' };
