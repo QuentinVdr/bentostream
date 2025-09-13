@@ -183,6 +183,10 @@ export const useStreamStore = create<StreamStore>()(
         swapArrayElements(streams, nameA.replace('stream-', ''), nameB.replace('stream-', ''));
         const newLayout = state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`)!;
 
+        if (state.onStreamsChange) {
+          state.onStreamsChange(streams);
+        }
+
         set({
           streams: streams,
           layout: newLayout,
