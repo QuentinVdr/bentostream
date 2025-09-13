@@ -179,11 +179,12 @@ export const useStreamStore = create<StreamStore>()(
           return;
         }
 
-        swapArrayElements(state.streams, nameA.replace('stream-', ''), nameB.replace('stream-', ''));
+        const streams = [...state.streams];
+        swapArrayElements(streams, nameA.replace('stream-', ''), nameB.replace('stream-', ''));
         const newLayout = state.swapItemByName(`stream-${nameA}`, `stream-${nameB}`)!;
 
         set({
-          streams: state.streams,
+          streams: streams,
           layout: newLayout,
         });
       },
