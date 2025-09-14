@@ -116,8 +116,12 @@ export const loadLayoutFromLocalStorage = (
       })
       .filter((item): item is Layout => item !== undefined);
 
-    if (!isActiveChatSet && !!requestedActiveChat) {
-      layout.push({ i: `chat-${requestedActiveChat}`, x: 9, y: 0, w: 3, h: 8 });
+    if (!isActiveChatSet) {
+      if (requestedActiveChat) {
+        layout.push({ i: `chat-${requestedActiveChat}`, x: 9, y: 0, w: 3, h: 8 });
+      } else {
+        layout.push({ i: `chat-${streams[0]}`, x: 0, y: 0, w: 0, h: 0 });
+      }
     }
 
     layout.push(
