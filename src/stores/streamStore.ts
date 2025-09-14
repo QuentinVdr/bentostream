@@ -213,8 +213,6 @@ export const useStreamStore = create<StreamStore>()(
             activeChat: streamer,
             layout: newLayout,
           });
-
-          saveLayoutToLocalStorage(newLayout, state.streams);
         }
       },
 
@@ -233,8 +231,6 @@ export const useStreamStore = create<StreamStore>()(
           activeChat: '',
           layout: newLayout,
         });
-
-        saveLayoutToLocalStorage(newLayout, state.streams);
       },
 
       changeChat: (streamer: string) => {
@@ -248,8 +244,6 @@ export const useStreamStore = create<StreamStore>()(
           activeChat: streamer,
           layout: newLayout,
         });
-
-        saveLayoutToLocalStorage(newLayout, state.streams);
       },
 
       isActiveChat: (stream: string) => {
