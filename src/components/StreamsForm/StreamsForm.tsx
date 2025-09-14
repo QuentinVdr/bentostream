@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSavedStreamStore } from '../../stores/savedStreamStore';
 
 interface StreamInput {
   id: string;
@@ -24,6 +25,7 @@ const StreamsForm = ({
   className = '',
   inputDataAttribute = 'index',
 }: StreamsFormProps) => {
+  const savedStreams = useSavedStreamStore(state => state.savedStreams);
   const [inputs, setInputs] = useState<StreamInput[]>([{ id: crypto.randomUUID(), value: '' }]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -287,8 +289,14 @@ const StreamsForm = ({
                     onKeyDown={e => handleKeyDown(e, index)}
                     {...{ [`data-${inputDataAttribute}`]: index }}
                     placeholder={`Enter stream name... ${index + 1}`}
+                    list={`champion-list-${index}`}
                     className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-3 text-white placeholder-zinc-400 transition-all duration-200 focus:border-transparent focus:ring-2 focus:ring-violet-500 focus:outline-none"
                   />
+                  <datalist id={`champion-list-${index}`}>
+                    {savedStreams && Array.isArray(savedStreams)
+                      ? savedStreams.map((savedStream: string) => <option key={savedStream} value={savedStream} />)
+                      : null}
+                  </datalist>
                   {input.value.trim() !== '' && (
                     <button
                       type="button"

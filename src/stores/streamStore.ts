@@ -9,6 +9,7 @@ import {
   getLayoutStorageKey,
   saveLayoutToLocalStorage,
 } from '../utils/LayoutUtils';
+import { useSavedStreamStore } from './savedStreamStore';
 
 interface StreamStore {
   streams: string[];
@@ -55,6 +56,8 @@ export const useStreamStore = create<StreamStore>()(
 
       setStreams: (streams: string[], shouldTriggerCallback = false) => {
         const state = get();
+
+        useSavedStreamStore.getState().saveStreams(streams);
 
         if (JSON.stringify(state.streams) === JSON.stringify(streams)) {
           return;
