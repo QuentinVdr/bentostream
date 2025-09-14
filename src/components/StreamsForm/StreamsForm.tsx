@@ -1,5 +1,6 @@
+import { useSavedStreamStore } from '@/stores/savedStreamStore';
+import type { SavedStream } from '@/types/SavedStream';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSavedStreamStore } from '../../stores/savedStreamStore';
 
 interface StreamInput {
   id: string;
@@ -294,7 +295,9 @@ const StreamsForm = ({
                   />
                   <datalist id={`champion-list-${index}`}>
                     {savedStreams && Array.isArray(savedStreams)
-                      ? savedStreams.map((savedStream: string) => <option key={savedStream} value={savedStream} />)
+                      ? savedStreams.map((savedStream: SavedStream) => (
+                          <option key={savedStream.name} value={savedStream.name} />
+                        ))
                       : null}
                   </datalist>
                   {input.value.trim() !== '' && (
