@@ -1,14 +1,14 @@
-import type { Layout } from 'react-grid-layout';
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { swapArrayElements } from '../utils/ArrayUtils';
+import { swapArrayElements } from '@/utils/ArrayUtils';
 import {
   clearAllStoredLayouts,
   generateDefaultLayout,
   generateOrLoadLayout,
   getLayoutStorageKey,
   saveLayoutToLocalStorage,
-} from '../utils/LayoutUtils';
+} from '@/utils/LayoutUtils';
+import type { Layout } from 'react-grid-layout';
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 import { useSavedStreamStore } from './savedStreamStore';
 
 interface StreamStore {

@@ -1,7 +1,7 @@
+import { useStreamStore } from '@/stores/streamStore';
 import { useState } from 'react';
-import { useStreamStore } from '../../stores/streamStore';
-import StreamsFormPopup from '../StreamsForm/StreamFormPopup/StreamsFormPopup';
 import Dropdown from '../global/Dropdown/Dropdown';
+import StreamsFormPopup from '../StreamsForm/StreamFormPopup/StreamsFormPopup';
 
 const GridToolsBar = () => {
   const { streams, setStreams, resetLayoutForStreamCount, activeChat, addChat } = useStreamStore();

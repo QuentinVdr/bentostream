@@ -1,5 +1,5 @@
+import StreamsForm from '@/components/StreamsForm/StreamsForm';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import StreamsForm from '../components/StreamsForm/StreamsForm';
 
 export const Route = createFileRoute('/')({
   component: Index,

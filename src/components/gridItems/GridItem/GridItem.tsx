@@ -1,5 +1,5 @@
+import { useIframeRefresh } from '@/hooks/useIframeRefresh';
 import { forwardRef, memo, useImperativeHandle, type ReactNode } from 'react';
-import { useIframeRefresh } from '../../../hooks/useIframeRefresh';
 import GridItemHeader from './GridItemHeader/GridItemHeader';
 
 interface GridItemProps {

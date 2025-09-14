@@ -1,6 +1,6 @@
+import Dropdown from '@/components/global/Dropdown/Dropdown';
+import { useStreamStore } from '@/stores/streamStore';
 import { useCallback, useMemo } from 'react';
-import { useStreamStore } from '../../../../stores/streamStore';
-import Dropdown from '../../../global/Dropdown/Dropdown';
 
 interface StreamItemHeaderProps {
   streamName: string;

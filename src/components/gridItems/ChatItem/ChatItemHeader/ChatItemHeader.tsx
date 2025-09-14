@@ -1,6 +1,6 @@
+import Dropdown from '@/components/global/Dropdown/Dropdown';
+import { useStreamStore } from '@/stores/streamStore';
 import { useMemo } from 'react';
-import { useStreamStore } from '../../../../stores/streamStore';
-import Dropdown from '../../../global/Dropdown/Dropdown';
 
 interface ChatItemHeaderProps {
   streamName: string;

@@ -1,13 +1,13 @@
+import ChatItem from '@/components/gridItems/ChatItem/ChatItem';
+import StreamItem from '@/components/gridItems/StreamItem/StreamItem';
+import GridToolsBar from '@/components/GridToolsBar/GridToolsBar';
+import useWindowDimensions from '@/hooks/useWindowDimensions';
+import { useStreamStore } from '@/stores/streamStore';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { useEffect, useMemo } from 'react';
 import ReactGridLayout, { type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import ChatItem from '../components/gridItems/ChatItem/ChatItem';
-import StreamItem from '../components/gridItems/StreamItem/StreamItem';
-import GridToolsBar from '../components/GridToolsBar/GridToolsBar';
-import { useWindowDimensions } from '../hooks/useWindowDimensions';
-import { useStreamStore } from '../stores/streamStore';
 
 export const Route = createFileRoute('/watch')({
   validateSearch: (search: Record<string, unknown>) => {
