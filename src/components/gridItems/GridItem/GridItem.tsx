@@ -32,6 +32,7 @@ const GridItem = memo(
           </GridItemHeader>
           <iframe
             ref={iframeRef}
+            key={iframeSrc}
             title={title}
             src={iframeSrc}
             height="100%"

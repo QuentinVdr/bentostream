@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { memo, useCallback, useRef } from 'react';
 import GridItem, { type GridItemRef } from '../GridItem/GridItem';
 import StreamItemHeader from './StreamItemHeader/StreamItemHeader';
 
@@ -6,7 +6,7 @@ interface StreamItemProps {
   streamName: string;
 }
 
-const StreamItem = ({ streamName }: StreamItemProps) => {
+const StreamItem = memo(({ streamName }: StreamItemProps) => {
   const gridItemRef = useRef<GridItemRef>(null);
 
   const title = `Stream: ${streamName}`;
@@ -22,7 +22,7 @@ const StreamItem = ({ streamName }: StreamItemProps) => {
       <StreamItemHeader streamName={streamName} handleRefresh={handleRefresh} />
     </GridItem>
   );
-};
+});
 
 StreamItem.displayName = 'StreamItem';
 
