@@ -6,23 +6,26 @@ interface StreamItemProps {
   streamName: string;
 }
 
-const StreamItem = memo(({ streamName }: StreamItemProps) => {
-  const gridItemRef = useRef<GridItemRef>(null);
+const StreamItem = memo(
+  ({ streamName }: StreamItemProps) => {
+    const gridItemRef = useRef<GridItemRef>(null);
 
-  const title = `Stream: ${streamName}`;
+    const title = `Stream: ${streamName}`;
 
-  const iframeSrc = `https://player.twitch.tv/?channel=${streamName}&parent=${window.location.hostname}`;
+    const iframeSrc = `https://player.twitch.tv/?channel=${streamName}&parent=${window.location.hostname}`;
 
-  const handleRefresh = useCallback(() => {
-    gridItemRef.current?.refreshIframe();
-  }, []);
+    const handleRefresh = useCallback(() => {
+      gridItemRef.current?.refreshIframe();
+    }, []);
 
-  return (
-    <GridItem ref={gridItemRef} title={title} iframeSrc={iframeSrc} allowFullScreen streamName={streamName}>
-      <StreamItemHeader streamName={streamName} handleRefresh={handleRefresh} />
-    </GridItem>
-  );
-});
+    return (
+      <GridItem ref={gridItemRef} title={title} iframeSrc={iframeSrc} allowFullScreen streamName={streamName}>
+        <StreamItemHeader streamName={streamName} handleRefresh={handleRefresh} />
+      </GridItem>
+    );
+  },
+  (prev, next) => prev.streamName.toLowerCase() === next.streamName.toLowerCase()
+);
 
 StreamItem.displayName = 'StreamItem';
 
