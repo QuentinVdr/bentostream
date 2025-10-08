@@ -22,6 +22,7 @@ interface IframeCacheProviderProps {
 
 export function IframeCacheProvider({ children }: IframeCacheProviderProps) {
   const containerMapRef = useRef<Map<string, HTMLDivElement>>(new Map());
+  const lastUsedRef = useRef<Map<string, number>>(new Map());
   const hiddenContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -37,12 +38,31 @@ export function IframeCacheProvider({ children }: IframeCacheProviderProps) {
     document.body.appendChild(hiddenDiv);
     hiddenContainerRef.current = hiddenDiv;
 
+    const cleanupInterval = setInterval(
+      () => {
+        const now = Date.now();
+        const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+        for (const [key, lastUsed] of lastUsedRef.current.entries()) {
+          if (now - lastUsed > CACHE_TTL) {
+            const container = containerMapRef.current.get(key);
+            container?.remove();
+            containerMapRef.current.delete(key);
+            lastUsedRef.current.delete(key);
+          }
+        }
+      },
+      5 * 60 * 1000
+    );
+
     return () => {
       hiddenDiv.remove();
+      clearInterval(cleanupInterval);
     };
   }, []);
 
   const getIframeContainer = useCallback((key: string): HTMLDivElement => {
+    lastUsedRef.current.set(key, Date.now());
     if (!containerMapRef.current.has(key)) {
       const container = document.createElement('div');
       container.style.width = '100%';
