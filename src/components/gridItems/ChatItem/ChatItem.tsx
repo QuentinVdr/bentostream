@@ -11,9 +11,10 @@ const ChatItem = memo(
   ({ streamName, isDarkThemePreferred = false }: ChatItemProps) => {
     const title = `Chat: ${streamName}`;
     const iframeSrc = `https://www.twitch.tv/embed/${streamName}/chat?parent=${window.location.hostname}${isDarkThemePreferred ? '&darkpopout' : ''}`;
+    const cacheKey = `chat-${streamName}`;
 
     return (
-      <GridItem title={title} iframeSrc={iframeSrc} streamName={streamName}>
+      <GridItem title={title} iframeSrc={iframeSrc} streamName={streamName} cacheKey={cacheKey}>
         <ChatItemHeader streamName={streamName} />
       </GridItem>
     );

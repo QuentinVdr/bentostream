@@ -1,6 +1,7 @@
 import ChatItem from '@/components/gridItems/ChatItem/ChatItem';
 import StreamItem from '@/components/gridItems/StreamItem/StreamItem';
 import GridToolsBar from '@/components/GridToolsBar/GridToolsBar';
+import { IframeCacheProvider } from '@/components/IframeCache/IframeCache';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import { useStreamStore } from '@/stores/streamStore';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
@@ -55,46 +56,48 @@ function Watch() {
   const rowHeight = useMemo(() => Math.max(24, Math.floor(dimensions.height / 12)), [dimensions.height]);
 
   return (
-    <div className="min-h-dvh w-full">
-      <GridToolsBar />
-      <ReactGridLayout
-        className="layout"
-        layout={layout}
-        cols={12}
-        rowHeight={rowHeight}
-        width={dimensions.hasVerticalScrollbar ? dimensions.width - 1 : dimensions.width}
-        isDraggable
-        isResizable
-        resizeHandles={['se', 'sw', 'ne', 'nw']}
-        margin={[0, 0]}
-        containerPadding={[0, 0]}
-        useCSSTransforms
-        transformScale={1}
-        verticalCompact
-        onLayoutChange={handleLayoutChange}
-      >
-        {layout.map(item => {
-          const [type, streamName] = item.i.split('-', 2);
+    <IframeCacheProvider>
+      <div className="min-h-dvh w-full">
+        <GridToolsBar />
+        <ReactGridLayout
+          className="layout"
+          layout={layout}
+          cols={12}
+          rowHeight={rowHeight}
+          width={dimensions.hasVerticalScrollbar ? dimensions.width - 1 : dimensions.width}
+          isDraggable
+          isResizable
+          resizeHandles={['se', 'sw', 'ne', 'nw']}
+          margin={[0, 0]}
+          containerPadding={[0, 0]}
+          useCSSTransforms
+          transformScale={1}
+          verticalCompact
+          onLayoutChange={handleLayoutChange}
+        >
+          {layout.map(item => {
+            const [type, streamName] = item.i.split('-', 2);
 
-          if (type === 'stream') {
-            return (
-              <div key={item.i}>
-                <StreamItem streamName={streamName} />
-              </div>
-            );
-          }
+            if (type === 'stream') {
+              return (
+                <div key={item.i}>
+                  <StreamItem streamName={streamName} />
+                </div>
+              );
+            }
 
-          if (type === 'chat') {
-            return (
-              <div key={item.i} className={isActiveChat(streamName) ? '' : 'hidden'}>
-                <ChatItem streamName={streamName} isDarkThemePreferred={isDarkThemePreferred} />
-              </div>
-            );
-          }
+            if (type === 'chat') {
+              return (
+                <div key={item.i} className={isActiveChat(streamName) ? '' : 'hidden'}>
+                  <ChatItem streamName={streamName} isDarkThemePreferred={isDarkThemePreferred} />
+                </div>
+              );
+            }
 
-          return null;
-        })}
-      </ReactGridLayout>
-    </div>
+            return null;
+          })}
+        </ReactGridLayout>
+      </div>
+    </IframeCacheProvider>
   );
 }

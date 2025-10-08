@@ -1,5 +1,6 @@
+import { CachedIframePortal } from '@/components/IframeCache/IframeCache';
 import { useIframeRefresh } from '@/hooks/useIframeRefresh';
-import { forwardRef, memo, useImperativeHandle, type ReactNode } from 'react';
+import { forwardRef, memo, useImperativeHandle, useRef, type ReactNode } from 'react';
 import GridItemHeader from './GridItemHeader/GridItemHeader';
 
 interface GridItemProps {
@@ -9,6 +10,7 @@ interface GridItemProps {
   streamName?: string;
   onRefresh?: () => void;
   children?: ReactNode;
+  cacheKey: string;
 }
 
 export interface GridItemRef {
@@ -17,8 +19,9 @@ export interface GridItemRef {
 
 const GridItem = memo(
   forwardRef<GridItemRef, GridItemProps>(
-    ({ title, iframeSrc, allowFullScreen, streamName, onRefresh, children }, ref) => {
+    ({ title, iframeSrc, allowFullScreen, streamName, onRefresh, children, cacheKey }, ref) => {
       const { iframeRef, refreshIframe } = useIframeRefresh(onRefresh);
+      const iframeContainerRef = useRef<HTMLDivElement>(null);
 
       useImperativeHandle(ref, () => ({ refreshIframe }), [refreshIframe]);
 
@@ -30,18 +33,22 @@ const GridItem = memo(
           <GridItemHeader title={title} streamName={streamName}>
             {children}
           </GridItemHeader>
-          <iframe
-            ref={iframeRef}
-            key={iframeSrc}
-            title={title}
-            src={iframeSrc}
-            height="100%"
-            width="100%"
-            allowFullScreen={allowFullScreen}
-            loading="lazy"
-            className="transition-all duration-300 ease-in-out group-hover:mt-12"
-            style={{ transform: 'translateZ(0)' }}
-          />
+          <div ref={iframeContainerRef} className="relative h-full w-full">
+            <CachedIframePortal cacheKey={cacheKey} targetRef={iframeContainerRef}>
+              <iframe
+                ref={iframeRef}
+                key={iframeSrc}
+                title={title}
+                src={iframeSrc}
+                height="100%"
+                width="100%"
+                allowFullScreen={allowFullScreen}
+                loading="lazy"
+                className="transition-all duration-300 ease-in-out group-hover:mt-12"
+                style={{ transform: 'translateZ(0)' }}
+              />
+            </CachedIframePortal>
+          </div>
         </section>
       );
     }

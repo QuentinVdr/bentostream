@@ -13,13 +13,21 @@ const StreamItem = memo(
     const title = `Stream: ${streamName}`;
 
     const iframeSrc = `https://player.twitch.tv/?channel=${streamName}&parent=${window.location.hostname}`;
+    const cacheKey = `stream-${streamName}`;
 
     const handleRefresh = useCallback(() => {
       gridItemRef.current?.refreshIframe();
     }, []);
 
     return (
-      <GridItem ref={gridItemRef} title={title} iframeSrc={iframeSrc} allowFullScreen streamName={streamName}>
+      <GridItem
+        ref={gridItemRef}
+        title={title}
+        iframeSrc={iframeSrc}
+        allowFullScreen
+        streamName={streamName}
+        cacheKey={cacheKey}
+      >
         <StreamItemHeader streamName={streamName} handleRefresh={handleRefresh} />
       </GridItem>
     );
