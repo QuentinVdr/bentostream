@@ -1,5 +1,5 @@
 import debounce from '@/utils/DebounceUtils';
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 
 interface WindowDimensions {
   width: number;
@@ -70,7 +70,7 @@ export const useWindowDimensions = ({
     };
   });
 
-  const updateDimensions = debounce(() => {
+  const updateDimensionsEvent = useEffectEvent(() => {
     const { hasVerticalScrollbar, hasHorizontalScrollbar } = detectScrollbars();
 
     setDimensions({
@@ -79,9 +79,11 @@ export const useWindowDimensions = ({
       hasVerticalScrollbar,
       hasHorizontalScrollbar,
     });
-  }, debounceMs);
+  });
 
   useEffect(() => {
+    const updateDimensions = debounce(updateDimensionsEvent, debounceMs);
+
     // Listen for both resize and scroll events
     const handleResize = () => updateDimensions();
     const handleScroll = () => updateDimensions();
@@ -102,7 +104,7 @@ export const useWindowDimensions = ({
       resizeObserver.disconnect();
       updateDimensions.cancel();
     };
-  }, [updateDimensions]);
+  }, [debounceMs]);
 
   return dimensions;
 };
