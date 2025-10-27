@@ -1,6 +1,6 @@
 import { useSavedStreamStore } from '@/stores/savedStreamStore';
 import type { SavedStream } from '@/types/SavedStream';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 interface StreamInput {
   id: string;
@@ -27,11 +27,7 @@ const StreamsForm = ({
   inputDataAttribute = 'index',
 }: StreamsFormProps) => {
   const savedStreams = useSavedStreamStore(state => state.savedStreams);
-  const [inputs, setInputs] = useState<StreamInput[]>([{ id: crypto.randomUUID(), value: '' }]);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-
-  useEffect(() => {
+  const [inputs, setInputs] = useState<StreamInput[]>(() => {
     if (initialStreams.length > 0) {
       const newInputs: StreamInput[] = initialStreams.map(stream => ({
         id: crypto.randomUUID(),
@@ -40,9 +36,12 @@ const StreamsForm = ({
       if (newInputs.length < 6) {
         newInputs.push({ id: crypto.randomUUID(), value: '' });
       }
-      setInputs(newInputs);
+      return newInputs;
     }
-  }, [initialStreams]);
+    return [{ id: crypto.randomUUID(), value: '' }];
+  });
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const validInputs = useMemo(
     () => inputs.filter(input => input.value.trim() !== '').map(input => input.value),
