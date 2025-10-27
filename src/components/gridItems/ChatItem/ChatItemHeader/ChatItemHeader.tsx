@@ -1,6 +1,5 @@
 import Dropdown from '@/components/global/Dropdown/Dropdown';
 import { useStreamStore } from '@/stores/streamStore';
-import { useMemo } from 'react';
 
 interface ChatItemHeaderProps {
   streamName: string;
@@ -9,17 +8,13 @@ interface ChatItemHeaderProps {
 const ChatItemHeader = ({ streamName }: ChatItemHeaderProps) => {
   const { changeChat, streams, removeChat } = useStreamStore();
 
-  const chatDropdownItems = useMemo(
-    () =>
-      streams
-        .filter(s => s !== streamName)
-        .map(streamer => ({
-          id: streamer,
-          label: streamer,
-          onClick: () => changeChat(streamer),
-        })),
-    [streams, streamName, changeChat]
-  );
+  const chatDropdownItems = streams
+    .filter(s => s !== streamName)
+    .map(streamer => ({
+      id: streamer,
+      label: streamer,
+      onClick: () => changeChat(streamer),
+    }));
 
   return (
     <>

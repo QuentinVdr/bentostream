@@ -4,7 +4,7 @@ import GridToolsBar from '@/components/GridToolsBar/GridToolsBar';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import { useStreamStore } from '@/stores/streamStore';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import ReactGridLayout, { type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -52,7 +52,7 @@ function Watch() {
   };
 
   const dimensions = useWindowDimensions();
-  const rowHeight = useMemo(() => Math.max(24, Math.floor(dimensions.height / 12)), [dimensions.height]);
+  const rowHeight = Math.max(24, Math.floor(dimensions.height / 12));
 
   return (
     <div className="min-h-dvh w-full">

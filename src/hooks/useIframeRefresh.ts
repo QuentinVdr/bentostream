@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export function useIframeRefresh(onRefresh?: () => void) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const refreshIframe = useCallback(() => {
+  const refreshIframe = () => {
     const node = iframeRef.current;
     if (!node) {
       onRefresh?.();
@@ -24,7 +24,7 @@ export function useIframeRefresh(onRefresh?: () => void) {
     }, 100);
 
     onRefresh?.();
-  }, [onRefresh]);
+  };
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {

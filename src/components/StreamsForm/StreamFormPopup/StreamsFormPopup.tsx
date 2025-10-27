@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import StreamsForm from '../StreamsForm';
 
 interface StreamsFormPopupProps {
@@ -12,27 +12,21 @@ interface StreamsFormPopupProps {
 const StreamsFormPopup = ({ isOpen, onClose, onSubmit, initialStreams = [] }: StreamsFormPopupProps) => {
   const navigate = useNavigate();
 
-  const handleSubmit = useCallback(
-    (streamNames: string[]) => {
-      if (onSubmit) {
-        onSubmit(streamNames);
-      } else {
-        // Default behavior: navigate to watch page
-        navigate({ to: `/watch`, search: { streams: streamNames } });
-      }
-      onClose();
-    },
-    [onSubmit, navigate, onClose]
-  );
+  const handleSubmit = (streamNames: string[]) => {
+    if (onSubmit) {
+      onSubmit(streamNames);
+    } else {
+      // Default behavior: navigate to watch page
+      navigate({ to: `/watch`, search: { streams: streamNames } });
+    }
+    onClose();
+  };
 
-  const handleBackdropClick = useCallback(
-    (e: React.MouseEvent) => {
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    },
-    [onClose]
-  );
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
 
   // Handle escape key
   useEffect(() => {

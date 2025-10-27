@@ -1,5 +1,5 @@
 import debounce from '@/utils/DebounceUtils';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface WindowDimensions {
   width: number;
@@ -57,9 +57,7 @@ export const useWindowDimensions = ({
   scrollbarWidth,
 }: UseWindowDimensionsOptions = {}): WindowDimensions => {
   // Calculate scrollbar width once on mount if not provided
-  const actualScrollbarWidth = useMemo(() => {
-    return scrollbarWidth ?? getScrollbarWidth();
-  }, [scrollbarWidth]);
+  const actualScrollbarWidth = scrollbarWidth ?? getScrollbarWidth();
 
   const [dimensions, setDimensions] = useState<WindowDimensions>(() => {
     const { hasVerticalScrollbar, hasHorizontalScrollbar } = detectScrollbars();
@@ -72,20 +70,16 @@ export const useWindowDimensions = ({
     };
   });
 
-  const updateDimensions = useMemo(
-    () =>
-      debounce(() => {
-        const { hasVerticalScrollbar, hasHorizontalScrollbar } = detectScrollbars();
+  const updateDimensions = debounce(() => {
+    const { hasVerticalScrollbar, hasHorizontalScrollbar } = detectScrollbars();
 
-        setDimensions({
-          width: window.innerWidth - (hasVerticalScrollbar ? actualScrollbarWidth : 0),
-          height: window.innerHeight - (hasHorizontalScrollbar ? actualScrollbarWidth : 0),
-          hasVerticalScrollbar,
-          hasHorizontalScrollbar,
-        });
-      }, debounceMs),
-    [debounceMs, actualScrollbarWidth]
-  );
+    setDimensions({
+      width: window.innerWidth - (hasVerticalScrollbar ? actualScrollbarWidth : 0),
+      height: window.innerHeight - (hasHorizontalScrollbar ? actualScrollbarWidth : 0),
+      hasVerticalScrollbar,
+      hasHorizontalScrollbar,
+    });
+  }, debounceMs);
 
   useEffect(() => {
     // Listen for both resize and scroll events
