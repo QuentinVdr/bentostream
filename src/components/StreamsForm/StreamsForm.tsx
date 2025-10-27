@@ -1,6 +1,6 @@
 import { useSavedStreamStore } from '@/stores/savedStreamStore';
 import type { SavedStream } from '@/types/SavedStream';
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 
 interface StreamInput {
   id: string;
@@ -43,18 +43,15 @@ const StreamsForm = ({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-  const validInputs = useMemo(
-    () => inputs.filter(input => input.value.trim() !== '').map(input => input.value),
-    [inputs]
-  );
+  const validInputs = inputs.filter(input => input.value.trim() !== '').map(input => input.value);
 
   // Helper function to clear all drag states
-  const clearDragStates = useCallback(() => {
+  const clearDragStates = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
-  }, []);
+  };
 
-  const handleClearInput = useCallback((index: number) => {
+  const handleClearInput = (index: number) => {
     setInputs(prev => {
       const newInputs = prev.filter((_, i) => i !== index);
 
@@ -71,66 +68,60 @@ const StreamsForm = ({
 
       return newInputs;
     });
-  }, []);
+  };
 
-  const handleClearAll = useCallback(() => {
+  const handleClearAll = () => {
     setInputs([{ id: crypto.randomUUID(), value: '' }]);
-  }, []);
+  };
 
-  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+  const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', '');
-  }, []);
+  };
 
-  const handleDragOver = useCallback(
-    (e: React.DragEvent, index: number) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      if (draggedIndex !== null && draggedIndex !== index) {
-        setDragOverIndex(index);
-      }
-    },
-    [draggedIndex]
-  );
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
 
-  const handleDragLeave = useCallback(() => {
+  const handleDragLeave = () => {
     setDragOverIndex(null);
-  }, []);
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent, dropIndex: number) => {
-      e.preventDefault();
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
 
-      if (draggedIndex === null || draggedIndex === dropIndex) {
-        clearDragStates();
-        return;
-      }
-
-      setInputs(prev => {
-        const newInputs = [...prev];
-        const draggedItem = newInputs[draggedIndex];
-
-        // Remove the dragged item
-        newInputs.splice(draggedIndex, 1);
-
-        // Insert it at the new position
-        const adjustedDropIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
-        newInputs.splice(adjustedDropIndex, 0, draggedItem);
-
-        return newInputs;
-      });
-
+    if (draggedIndex === null || draggedIndex === dropIndex) {
       clearDragStates();
-    },
-    [draggedIndex, clearDragStates]
-  );
+      return;
+    }
 
-  const handleDragEnd = useCallback(() => {
+    setInputs(prev => {
+      const newInputs = [...prev];
+      const draggedItem = newInputs[draggedIndex];
+
+      // Remove the dragged item
+      newInputs.splice(draggedIndex, 1);
+
+      // Insert it at the new position
+      const adjustedDropIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+      newInputs.splice(adjustedDropIndex, 0, draggedItem);
+
+      return newInputs;
+    });
+
     clearDragStates();
-  }, [clearDragStates]);
+  };
 
-  const handleInputChange = useCallback((index: number, value: string) => {
+  const handleDragEnd = () => {
+    clearDragStates();
+  };
+
+  const handleInputChange = (index: number, value: string) => {
     setInputs(prev => {
       const newInputs = [...prev];
       newInputs[index] = { ...newInputs[index], value };
@@ -155,53 +146,45 @@ const StreamsForm = ({
 
       return result;
     });
-  }, []);
+  };
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validInputs.length > 0 && onSubmit) {
+      onSubmit(validInputs);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (validInputs.length > 0 && onSubmit) {
-        onSubmit(validInputs);
+      const nextInput = document.querySelector(`input[data-${inputDataAttribute}="${index + 1}"]`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+      } else {
+        handleSubmit(e);
       }
-    },
-    [onSubmit, validInputs]
-  );
+    }
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent, index: number) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        const nextInput = document.querySelector(
-          `input[data-${inputDataAttribute}="${index + 1}"]`
-        ) as HTMLInputElement;
-        if (nextInput) {
-          nextInput.focus();
-        } else {
-          handleSubmit(e);
-        }
+    if (e.key === 'Backspace') {
+      if (index === 0 && inputs.length === 2) {
+        setInputs(prev => prev.filter((_, i) => i !== 1));
+        return;
       }
 
-      if (e.key === 'Backspace') {
-        if (index === 0 && inputs.length === 2) {
-          setInputs(prev => prev.filter((_, i) => i !== 1));
-          return;
-        }
-
-        if (inputs[index].value === '' && index > 0) {
-          setInputs(prev => prev.filter((_, i) => i !== index));
-          setTimeout(() => {
-            const prevInput = document.querySelector(
-              `input[data-${inputDataAttribute}="${index - 1}"]`
-            ) as HTMLInputElement;
-            if (prevInput) {
-              prevInput.focus();
-            }
-          }, 0);
-        }
+      if (inputs[index].value === '' && index > 0) {
+        setInputs(prev => prev.filter((_, i) => i !== index));
+        setTimeout(() => {
+          const prevInput = document.querySelector(
+            `input[data-${inputDataAttribute}="${index - 1}"]`
+          ) as HTMLInputElement;
+          if (prevInput) {
+            prevInput.focus();
+          }
+        }, 0);
       }
-    },
-    [inputs, handleSubmit, inputDataAttribute]
-  );
+    }
+  };
 
   const formClassName = className || 'mx-auto w-full max-w-2xl rounded-lg bg-zinc-900 p-6 shadow-lg';
 

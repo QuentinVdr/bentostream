@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef } from 'react';
+import { memo, useRef } from 'react';
 import GridItem, { type GridItemRef } from '../GridItem/GridItem';
 import StreamItemHeader from './StreamItemHeader/StreamItemHeader';
 
@@ -14,9 +14,9 @@ const StreamItem = memo(
 
     const iframeSrc = `https://player.twitch.tv/?channel=${streamName}&parent=${window.location.hostname}`;
 
-    const handleRefresh = useCallback(() => {
+    const handleRefresh = () => {
       gridItemRef.current?.refreshIframe();
-    }, []);
+    };
 
     return (
       <GridItem ref={gridItemRef} title={title} iframeSrc={iframeSrc} allowFullScreen streamName={streamName}>

@@ -1,6 +1,5 @@
 import Dropdown from '@/components/global/Dropdown/Dropdown';
 import { useStreamStore } from '@/stores/streamStore';
-import { useCallback, useMemo } from 'react';
 
 interface StreamItemHeaderProps {
   streamName: string;
@@ -10,24 +9,17 @@ interface StreamItemHeaderProps {
 const StreamItemHeader = ({ streamName, handleRefresh }: StreamItemHeaderProps) => {
   const { swapStreamsByName, streams } = useStreamStore();
 
-  const handleStreamSwap = useCallback(
-    (targetStreamName: string) => {
-      swapStreamsByName(streamName, targetStreamName);
-    },
-    [swapStreamsByName, streamName]
-  );
+  const handleStreamSwap = (targetStreamName: string) => {
+    swapStreamsByName(streamName, targetStreamName);
+  };
 
-  const swapDropdownItems = useMemo(
-    () =>
-      streams
-        .filter(s => s !== streamName)
-        .map(targetStream => ({
-          id: targetStream,
-          label: `Swap with ${targetStream}`,
-          onClick: () => handleStreamSwap(targetStream),
-        })),
-    [streams, streamName, handleStreamSwap]
-  );
+  const swapDropdownItems = streams
+    .filter(s => s !== streamName)
+    .map(targetStream => ({
+      id: targetStream,
+      label: `Swap with ${targetStream}`,
+      onClick: () => handleStreamSwap(targetStream),
+    }));
 
   return (
     <>
