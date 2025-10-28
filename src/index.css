@@ -1,11 +1,15 @@
 @import 'tailwindcss';
 
 @layer components {
+  html,
   body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100vh;
+    width: 100%;
     background-color: var(--color-zinc-950);
     color: var(--color-white);
-    min-height: 100dvh;
-    inline-size: 100%;
+    box-sizing: border-box;
   }
 }
 
@@ -17,6 +21,8 @@
 
 .react-grid-layout {
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .react-grid-item {
@@ -25,6 +31,9 @@
   border: 1px solid transparent;
   will-change: transform;
   transform: translateZ(0); /* Force GPU acceleration */
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .react-grid-item.cssTransforms {

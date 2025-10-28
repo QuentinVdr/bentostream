@@ -1,106 +1,54 @@
 import debounce from '@/utils/DebounceUtils';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface WindowDimensions {
   width: number;
   height: number;
-  hasVerticalScrollbar: boolean;
-  hasHorizontalScrollbar: boolean;
 }
 
 interface UseWindowDimensionsOptions {
   debounceMs?: number;
-  scrollbarWidth?: number;
 }
 
-const getScrollbarWidth = (): number => {
-  // Return 0 for SSR or when document.body is not available
-  if (typeof document === 'undefined' || !document.body) {
-    return 0;
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
+
+const getWindowDimensions = (): WindowDimensions => {
+  if (!isBrowser) {
+    return { width: 0, height: 0 };
   }
-  // Create a temporary element to measure scrollbar width
-  const outer = document.createElement('div');
-  outer.style.visibility = 'hidden';
-  outer.style.overflow = 'scroll';
-  outer.style.position = 'absolute';
-  outer.style.top = '-9999px';
-  outer.style.width = '50px';
-  outer.style.height = '50px';
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (outer.style as any).msOverflowStyle = 'scrollbar';
 
-  document.body.appendChild(outer);
-
-  const inner = document.createElement('div');
-  inner.style.width = '100%';
-  inner.style.height = '100%';
-  outer.appendChild(inner);
-
-  const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
-  outer.parentNode?.removeChild(outer);
-
-  return scrollbarWidth;
-};
-
-const detectScrollbars = () => {
-  const hasVerticalScrollbar = document.documentElement.scrollHeight > window.innerHeight;
-  const hasHorizontalScrollbar = document.documentElement.scrollWidth > window.innerWidth;
-
+  // Use clientWidth to exclude vertical scrollbar width
   return {
-    hasVerticalScrollbar,
-    hasHorizontalScrollbar,
+    width: document.documentElement.clientWidth,
+    height: window.innerHeight,
   };
 };
 
-export const useWindowDimensions = ({
-  debounceMs = 300,
-  scrollbarWidth,
-}: UseWindowDimensionsOptions = {}): WindowDimensions => {
-  // Calculate scrollbar width once on mount if not provided
-  const actualScrollbarWidth = scrollbarWidth ?? getScrollbarWidth();
-
-  const [dimensions, setDimensions] = useState<WindowDimensions>(() => {
-    const { hasVerticalScrollbar, hasHorizontalScrollbar } = detectScrollbars();
-
-    return {
-      width: window.innerWidth - (hasVerticalScrollbar ? actualScrollbarWidth : 0),
-      height: window.innerHeight - (hasHorizontalScrollbar ? actualScrollbarWidth : 0),
-      hasVerticalScrollbar,
-      hasHorizontalScrollbar,
-    };
-  });
-
-  const updateDimensionsEvent = useEffectEvent(() => {
-    const { hasVerticalScrollbar, hasHorizontalScrollbar } = detectScrollbars();
-
-    setDimensions({
-      width: window.innerWidth - (hasVerticalScrollbar ? actualScrollbarWidth : 0),
-      height: window.innerHeight - (hasHorizontalScrollbar ? actualScrollbarWidth : 0),
-      hasVerticalScrollbar,
-      hasHorizontalScrollbar,
-    });
-  });
+export const useWindowDimensions = ({ debounceMs = 16 }: UseWindowDimensionsOptions = {}): WindowDimensions => {
+  const [dimensions, setDimensions] = useState<WindowDimensions>(getWindowDimensions);
 
   useEffect(() => {
-    const updateDimensions = debounce(updateDimensionsEvent, debounceMs);
+    if (!isBrowser) return;
 
-    // Listen for both resize and scroll events
-    const handleResize = () => updateDimensions();
-    const handleScroll = () => updateDimensions();
+    const updateDimensions = debounce(() => {
+      setDimensions(getWindowDimensions());
+    }, debounceMs);
 
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Listen for window resize
+    window.addEventListener('resize', updateDimensions);
 
-    // Also listen for DOM changes that might affect scrollbars
+    // Create a ResizeObserver to watch for changes in document size
+    // This catches when scrollbars appear/disappear due to content changes
     const resizeObserver = new ResizeObserver(() => {
       updateDimensions();
     });
 
+    // Observe the documentElement (root html element) for size changes
     resizeObserver.observe(document.documentElement);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', updateDimensions);
       resizeObserver.disconnect();
       updateDimensions.cancel();
     };

@@ -4,7 +4,7 @@ import GridToolsBar from '@/components/GridToolsBar/GridToolsBar';
 import useWindowDimensions from '@/hooks/useWindowDimensions';
 import { useStreamStore } from '@/stores/streamStore';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import ReactGridLayout, { type Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -51,18 +51,18 @@ function Watch() {
     updateLayout(newLayout);
   };
 
-  const dimensions = useWindowDimensions();
-  const rowHeight = Math.max(24, Math.floor(dimensions.height / 12));
+  const { width, height } = useWindowDimensions();
+  const rowHeight = useMemo(() => Math.max(24, Math.floor(height / 12)), [height]);
 
   return (
-    <div className="min-h-dvh w-full">
+    <>
       <GridToolsBar />
       <ReactGridLayout
         className="layout"
         layout={layout}
         cols={12}
         rowHeight={rowHeight}
-        width={dimensions.hasVerticalScrollbar ? dimensions.width - 1 : dimensions.width}
+        width={width}
         isDraggable
         isResizable
         resizeHandles={['se', 'sw', 'ne', 'nw']}
@@ -95,6 +95,6 @@ function Watch() {
           return null;
         })}
       </ReactGridLayout>
-    </div>
+    </>
   );
 }
